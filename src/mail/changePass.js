@@ -1,4 +1,5 @@
-const nodemailer = require('nodemailer')
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 enviarPass = async (usuario, clave) => {
 
@@ -6,13 +7,13 @@ enviarPass = async (usuario, clave) => {
         host: 'smtp.gmail.com',
         port: 587,
         auth: {
-            user: 'computer.store.original@gmail.com',
-            pass: 'ahqdrlukahufvbnt'
+            user: process.env.EMAIL,
+            pass: process.env.PASSWORD
         }
     }
 
     const mensaje = {
-        from: 'computer.store.original@gmail.com',
+        from: process.env.EMAIL,
         to: usuario ,
         subject: 'codigo para cambio de contraseña' ,
         text: `su codigo solicitado para el cambio de contraseña de su usuario en nuestra pagina 

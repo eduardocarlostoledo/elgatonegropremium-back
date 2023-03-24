@@ -1,4 +1,5 @@
-const nodemailer = require('nodemailer')
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 enviarMail = async (producto, precio, usuario, statusId) => {
 
@@ -8,13 +9,13 @@ enviarMail = async (producto, precio, usuario, statusId) => {
         host: 'smtp.gmail.com',
         port: 587,
         auth: {
-            user: 'computer.store.original@gmail.com',
-            pass: 'ahqdrlukahufvbnt'
+            user: process.env.EMAIL,
+            pass: process.env.PASSWORD
         }
     }
 
     const mensaje = {
-        from: 'computer.store.original@gmail.com',
+        from: process.env.EMAIL,
         to: usuario,
         subject: 'compra realizada de forma exitosa!' ,
         text: `muchas gracias por comprar en Computer Store a continuacion adjunto el detalle de su compra:
