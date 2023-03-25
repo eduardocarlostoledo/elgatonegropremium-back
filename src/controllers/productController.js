@@ -191,6 +191,7 @@ const postProduct = async (product,image) => {
 
       //invoco la funcion para subir la imagen a cloudinary
       const result=await uploadImage(image.tempFilePath)
+      console.log(result, "POSTIMAGE")
 
       const newProduct = await Product.create({
         name: product.name,
@@ -202,7 +203,7 @@ const postProduct = async (product,image) => {
         info_adicional: product.info_adicional,
         stock: product.stock,
       });
-      
+      console.log(newProduct, "POSTOK")
       //borro la imagen de la carpeta uploads para que solo quede guardada en cloudinary
       await fs.remove(image.tempFilePath)
 
