@@ -171,50 +171,51 @@ const getProductName = async (product) => {
 
 
 // Crea un producto en la BDD, esta accion sirve para testear. (Unicamente va a ser ejecutada por un administrador, no el usuario)
-const postProduct = async (product,image) => {
-  const { name, price, type, brand, description,info_adicional, stock} = product;
+const postProduct = async (product, image) => {
+  const { name, price, type, brand, description, info_adicional, stock } = product;
   console.log(product.stock, "POST")
-  if (!name || !price || !type || !brand || !description || !image || !stock) throw Error("Mandatory data missing");
-  else {
-    try {
-      const [typeData, createdType] = await Type.findOrCreate({
-        where: { name: type },
-        defaults: { name: type }
-      });
-      console.log(typeData.name, "POST")
+  if (!name || !price || !type || !brand || !description || !image || !stock) {
+    throw new Error("Mandatory data missing");
+  }
 
-      const [brandData, createdBrand] = await Brand.findOrCreate({
-        where: { name: brand },
-        defaults: { name: brand }
-      });
-      console.log(brandData.name, "POST")
+  try {
+    const [typeData, createdType] = await Type.findOrCreate({
+      where: { name: type },
+      defaults: { name: type }
+    });
+    console.log(typeData.name, "POST")
 
-      //invoco la funcion para subir la imagen a cloudinary
-      const result=await uploadImage(image.tempFilePath)
-      console.log(result, "POSTIMAGE")
+    const [brandData, createdBrand] = await Brand.findOrCreate({
+      where: { name: brand },
+      defaults: { name: brand }
+    });
+    console.log(brandData.name, "POST")
 
-      const newProduct = await Product.create({
-        name: product.name,
-        price: product.price,
-        description: product.description,
-        image:{public_id:result.public_id,secure_url:result.secure_url},
-        typeId: typeData.id,
-        brandId: brandData.id,
-        info_adicional: product.info_adicional,
-        stock: product.stock,
-      });
-      console.log(newProduct, "POSTOK")
-      //borro la imagen de la carpeta uploads para que solo quede guardada en cloudinary
-      await fs.remove(image.tempFilePath)
+    const result = await uploadImage(image.tempFilePath);
+    console.log(result, "POSTIMAGE")
 
-      console.log(product.stock, newProduct, "POSTOK")
+    const newProduct = await Product.create({
+      name,
+      price,
+      description,
+      image: { public_id: result.public_id, secure_url: result.secure_url },
+      typeId: typeData.id,
+      brandId: brandData.id,
+      info_adicional,
+      stock,
+    });
+    console.log(newProduct, "POSTOK")
 
-      return newProduct;
-    } catch (error) {
-      throw Error(error.message);
-    }
+    await fs.remove(image.tempFilePath);
+    console.log(product.stock, newProduct, "POSTOK")
+
+    return newProduct;
+  } catch (error) {
+    console.error(error);
+    throw new Error(error.message);
   }
 };
+
 
 const putProduct = async (id,product, image) => {
   const { name, price, type, brand, description,info_adicional, stock } = product;
