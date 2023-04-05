@@ -12,9 +12,9 @@ const deleteImage= async(id)=>{
 }
 
 v2.config({
-    cloud_name: dgvrqx1ca,
-    api_key: 211176113828956,
-    api_secret: UxjYWjLd2p-fZm1Tw-kqDRCAxW4,
+    cloud_name: "dgvrqx1ca",
+    api_key: "211176113828956",
+    api_secret: "UxjYWjLd2p-fZm1Tw-kqDRCAxW4",
     secure:true
 })
 
