@@ -1,5 +1,4 @@
 const nodemailer = require('nodemailer');
-require('dotenv').config();
 
 enviarMail = async (producto, precio, usuario, statusId) => {
 
