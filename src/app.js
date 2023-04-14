@@ -1,11 +1,15 @@
+require('dotenv').config();
 const express = require('express');
 const routes = require('./routes/index.js');
-const fileUpload =require('express-fileupload');
+const fileUpload = require('express-fileupload');
 const cors = require("cors");
 const mercadopago = require("mercadopago");
+const ACCESS_TOKEN_MERCADOPAGO = process.env.ACCESS_TOKEN_MERCADOPAGO;
+
 mercadopago.configure({
-	access_token: "TEST-2173554663380212-021616-6c499d124b985881a40b539254bb3afd-96768851",
+  access_token: ACCESS_TOKEN_MERCADOPAGO,
 });
+console.log(ACCESS_TOKEN_MERCADOPAGO)
 
 require('./db.js');
 
