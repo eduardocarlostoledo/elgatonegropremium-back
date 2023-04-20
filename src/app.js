@@ -9,7 +9,6 @@ const ACCESS_TOKEN_MERCADOPAGO = process.env.ACCESS_TOKEN_MERCADOPAGO;
 mercadopago.configure({
   access_token: ACCESS_TOKEN_MERCADOPAGO,
 });
-console.log(ACCESS_TOKEN_MERCADOPAGO)
 
 require('./db.js');
 
