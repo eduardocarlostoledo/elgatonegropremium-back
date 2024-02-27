@@ -7,6 +7,8 @@ const {
   DB_USER, DB_PASSWORD, DB_HOST,DB_NAME, DB_PORT
 } = process.env;
 
+//postgresql://postgres:d6ED5aFAd45beda6FbCcBAEB3a1DC5bd@postgres.railway.internal:5432/railway
+
 const sequelize = new Sequelize(`postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}`, {
   
   logging: false, // set to console.log to see the raw SQL queries
