@@ -1,7 +1,9 @@
 const { Cart,Product } = require("../db");
 
 const addProductCart = async (product) => {
+  console.log("producto addProductCart", product); 
     const { name, image, price } = product;
+
     //busco el producto que coincida con el name 
     const prod=await Product.findOne({where:{name}});
 

@@ -3,11 +3,33 @@ const {Op} = require('sequelize')
 const {uploadImage, deleteImage}=require('../utils/cloudinary')
 const fs =require('fs-extra');
 
-// Obtiene los tipos de productos de la BDD
-
-const getTypeProducts = async() => {
+const postTypeProductForAdmin = async (name) => {
   try {
-    
+    const [typeProduct] = await Type.findOrCreate({
+      where: { name },
+      defaults: { name }
+    });
+    return typeProduct;
+  } catch (error) {
+    throw new Error("Error creating product type: " + error.message);
+  }
+};
+
+const postBrandProductForAdmin = async (name) => {
+  try {
+    const [brandProduct] = await Brand.findOrCreate({
+      where: { name },
+      defaults: { name }
+    });
+    return brandProduct;
+  } catch (error) {
+    throw new Error("Error creating product brand: " + error.message);
+  }
+};
+
+// Obtiene los tipos de productos de la BDD
+const getTypeProducts = async() => {
+  try {    
     const products = await Type.findAll();  
     return products;
   } catch (error) {
@@ -171,29 +193,62 @@ const getProductName = async (product) => {
 
 
 // Crea un producto en la BDD, esta accion sirve para testear. (Unicamente va a ser ejecutada por un administrador, no el usuario)
+// const postProduct = async (product, image) => {
+//   const { name, price, type, brand, description, info_adicional, stock } = product;
+//   console.log(product.stock, "POST")
+//   if (!name || !price || !type || !brand || !description || !image || !stock) {
+//     throw new Error("Mandatory data missing");
+//   }
+
+//   try {
+//     const [typeData, createdType] = await Type.findOrCreate({
+//       where: { name: type },
+//       defaults: { name: type }
+//     });
+//     console.log(typeData.name, "POST")
+
+//     const [brandData, createdBrand] = await Brand.findOrCreate({
+//       where: { name: brand },
+//       defaults: { name: brand }
+//     });
+//     console.log(brandData.name, "POST")
+
+//     const result = await uploadImage(image.tempFilePath);
+//     console.log(result, "POSTIMAGE")
+
+//     const newProduct = await Product.create({
+//       name,
+//       price,
+//       description,
+//       image: { public_id: result.public_id, secure_url: result.secure_url },
+//       typeId: typeData.id,
+//       brandId: brandData.id,
+//       info_adicional,
+//       stock,
+//     });
+//     console.log(newProduct, "POSTOK")
+
+//     await fs.remove(image.tempFilePath);
+//     console.log(product.stock, newProduct, "POSTOK")
+
+//     return newProduct;
+//   } catch (error) {
+//     console.error(error);
+//     throw new Error(error.message);
+//   }
+// };
+
 const postProduct = async (product, image) => {
   const { name, price, type, brand, description, info_adicional, stock } = product;
-  console.log(product.stock, "POST")
   if (!name || !price || !type || !brand || !description || !image || !stock) {
     throw new Error("Mandatory data missing");
   }
 
   try {
-    const [typeData, createdType] = await Type.findOrCreate({
-      where: { name: type },
-      defaults: { name: type }
-    });
-    console.log(typeData.name, "POST")
-
-    const [brandData, createdBrand] = await Brand.findOrCreate({
-      where: { name: brand },
-      defaults: { name: brand }
-    });
-    console.log(brandData.name, "POST")
+    const [typeData] = await Type.findOrCreate({ where: { name: type }, defaults: { name: type } });
+    const [brandData] = await Brand.findOrCreate({ where: { name: brand }, defaults: { name: brand } });
 
     const result = await uploadImage(image.tempFilePath);
-    console.log(result, "POSTIMAGE")
-
     const newProduct = await Product.create({
       name,
       price,
@@ -204,15 +259,12 @@ const postProduct = async (product, image) => {
       info_adicional,
       stock,
     });
-    console.log(newProduct, "POSTOK")
 
     await fs.remove(image.tempFilePath);
-    console.log(product.stock, newProduct, "POSTOK")
-
     return newProduct;
   } catch (error) {
     console.error(error);
-    throw new Error(error.message);
+    throw new Error("Error creating product: " + error.message);
   }
 };
 
@@ -317,5 +369,7 @@ module.exports = {
   putReview,
   banOrUnban,
   getProductsForAdmin,
-  getProductsByNameForAdmin
+  getProductsByNameForAdmin,
+  postBrandProductForAdmin,
+  postTypeProductForAdmin
 };

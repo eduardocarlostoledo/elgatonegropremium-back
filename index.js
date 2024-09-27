@@ -52,6 +52,6 @@ conn.sync({ alter: false }).then(() => { //CAMBIAR A {alter: true} CUANDO TERMIN
 1111111¶¶¶¶¶¶¶¶¶¶¶111111111111111111111111111
 111111111111111111111111111111111111111111111
 111111111111111111111111111111111111111111111
-Server listening at ${PORT}`); // eslint-disable-line no-console
+Servidor activo en el puerto ${PORT}`); // eslint-disable-line no-console
   });
 }); 

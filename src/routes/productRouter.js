@@ -1,5 +1,8 @@
 const { Router } = require('express');
-const { postProduct,
+
+
+const {
+  postProduct,
   getProducts,
   getProductName,
   getProductsByName,
@@ -10,95 +13,83 @@ const { postProduct,
   putProduct,
   banOrUnban,
   getProductsForAdmin,
-  getProductsByNameForAdmin
-  } = require('../controllers/productController')
+  getProductsByNameForAdmin,  postBrandProductForAdmin,
+  postTypeProductForAdmin
+} = require('../controllers/productController');
+//const { getUserById } = require('../controllers/usersController'); // Suponiendo que tienes un método para obtener usuario
 
-const productRouter = Router()
+// Importación correcta
+const { verificaToken } = require("../helpers/verificaToken.js");
+const { verifyAdmin } = require("../helpers/verifyAdmin.js");
+
+console.log("check midlewares", verificaToken, verifyAdmin)
+
+const productRouter = Router();
 
 
-// Ruta POST de Productos, va a ser utilizada por el administrador.
-
-
-
-productRouter.post('/', async (req,res) => {
+// Ruta POST de productos, solo puede ser usada por administradores
+productRouter.post('/', 
+  verificaToken, verifyAdmin, 
+  async (req, res) => {
   try {
-    let product = req.body;
-    console.log(product);
-    const newProduct = await postProduct(product,req.files.image);
-    res.status(201).send({ status: "OK", data: newProduct });
+    const product = req.body;
+    const newProduct = await postProduct(product, req.files?.image); 
+    res.status(201).send({ status: 'Producto Creado en la Base de Datos', data: newProduct });
   } catch (error) {
-    return res.status(400).send({ error: error.message });
+    res.status(400).send({ error: error.message });
   }
 });
 
-productRouter.put('/:id', async (req,res) => {
-  let image=false;
-  if(req.files) image =req.files.image;
+// Ruta PUT para actualizar un producto
+productRouter.put('/:id', 
+  verificaToken, verifyAdmin, 
+  async (req, res) => {
+  let image = req.files ? req.files.image : false;
   try {
-    const updateProduct = await putProduct(req.params.id,req.body,image);
-    res.status(201).send(updateProduct);
+    const updateProduct = await putProduct(req.params.id, req.body, image);
+    res.status(200).json(updateProduct);
   } catch (error) {
-    return res.status(400).send(error.message);
+    res.status(400).json({ error: error.message });
   }
 });
-  
 
-// Ruta GET para traer todos los tipos de productos.
-
-// productRouter.get("/types", async (req, res) => {
-//   try {
-//       const products = await getTypeProducts();
-//     res.status(200).json({ data: products});
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// });
-
-productRouter.get("/BuildSearch", async (req, res) => {
+// Ruta GET para realizar una búsqueda avanzada de productos
+productRouter.get('/BuildSearch', async (req, res) => {
   try {
-    const {socket,type} = req.query
-    console.log(socket,type);
-    const products = await BuildSearch(socket,type);
+    const { socket, type } = req.query;
+    const products = await BuildSearch(socket, type);
     res.status(200).json(products);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-productRouter.get("/types", async (req, res) => {
+// Ruta GET para obtener todos los tipos de productos
+productRouter.get('/types', async (req, res) => {
   try {
     const products = await getTypeProducts();
-    res.status(200).json(products); //cambio el retorno para q sea mas limpio dejo copia arriba
+    res.status(200).json(products);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-/* Ruta post para types */
-productRouter.post("/types", async (req, res) => {
-  const {name} = req.body;
-  try {   
-    const postProducts = await Type.findOrCreate({name});
+// Ruta POST para crear un nuevo tipo de producto (solo administradores)
+productRouter.post('/types', 
+  verificaToken , verifyAdmin, 
+  async (req, res) => {
+  const { name } = req.body;
+  try {
+    const postProducts = await postTypeProductForAdmin( name );
     res.status(200).json(postProducts);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-
-// Ruta GET para traer todos las marcas de productos.
-
-// productRouter.get("/brands", async (req, res) => {
-//   try {
-//       const products = await getBrandProducts();
-//     res.status(200).json({ data: products});
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// });
-
-productRouter.get("/brands", async (req, res) => {
-  try {   
+// Ruta GET para obtener todas las marcas de productos
+productRouter.get('/brands', async (req, res) => {
+  try {
     const products = await getBrandProducts();
     res.status(200).json(products);
   } catch (error) {
@@ -106,68 +97,83 @@ productRouter.get("/brands", async (req, res) => {
   }
 });
 
-productRouter.post("/brands", async (req, res) => {
-  const {name} = req.body;
-  try {   
-    const postProducts = await Brand.findOrCreate({name});
+// Ruta POST para crear una nueva marca de producto (solo administradores)
+productRouter.post('/brands', 
+  verificaToken , verifyAdmin, 
+  async (req, res) => {
+  const { name } = req.body;
+  try {
+    const postProducts = await postBrandProductForAdmin( name );
     res.status(200).json(postProducts);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-
-//Ruta GET de productos, trae todos los productos si no tiene query y si tiene query de "name" busca los productos por su nombre
-// en caso de no encontrar nombre de ese producto, devuelve todos. (Ruta para el buscador)
-
-productRouter.get("/", async (req, res) => {
+// Ruta GET de productos con o sin filtro por nombre
+productRouter.get('/', async (req, res) => {
   try {
-    let products = req.query.name ? await getProductsByName(req.query.name) : await getProducts()
+    const products = req.query.name
+      ? await getProductsByName(req.query.name)
+      : await getProducts();
     res.status(200).json(products);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-productRouter.get("/ForAdmin", async (req, res) => {
+// Ruta GET para administradores con o sin filtro por nombre
+productRouter.get('/ForAdmin', 
+  verificaToken, verifyAdmin, 
+  async (req, res) => {
   try {
-    let products = req.query.name ?  await getProductsByNameForAdmin(req.query.name) : await getProductsForAdmin() 
+    const products = req.query.name
+      ? await getProductsByNameForAdmin(req.query.name)
+      : await getProductsForAdmin();
     res.status(200).json(products);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-//Ruta GET de productos por Name, busca el producto con un nombre exactamente igual al que recibe por parametro. (Ruta para el detail)
-
-  productRouter.get("/:name", async (req, res) => {
-    try {
-      const result = await getProductName(req.params.name);
-      result.length > 0 ? res.status(200).json({ data: result, message: "Producto solicitado" }) : res.status(404).json({ error: "Producto no encontrado" });
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+// Ruta GET para obtener un producto por nombre exacto
+productRouter.get('/:name', async (req, res) => {
+  try {
+    const result = await getProductName(req.params.name);
+    if (result.length > 0) {
+      res.status(200).json({ data: result, message: 'Producto solicitado' });
+    } else {
+      res.status(404).json({ error: 'Producto no encontrado' });
     }
-  });
-  
-//ruta para añadir review
-productRouter.put("/review/:id", async (req, res) =>{
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Ruta para añadir review
+productRouter.put('/review/:id', 
+  verificaToken, verifyAdmin, 
+  async (req, res) => {
   try {
-    const {id}=req.params;
-    const result= await putReview(id,req.body);
+    const { id } = req.params;
+    const result = await putReview(id, req.body);
     res.status(200).json(result);
   } catch (error) {
-    res.status(400).json(error.message)
+    res.status(400).json({ error: error.message });
   }
-})
+});
 
-productRouter.put("/ban/:id", async (req, res) =>{
+// Ruta para banear o desbanear producto
+productRouter.put('/ban/:id', 
+  verificaToken, verifyAdmin, 
+  async (req, res) => {
   try {
-    const {id}=req.params;
-    const result= await banOrUnban(id);
+    const { id } = req.params;
+    const result = await banOrUnban(id);
     res.status(200).json(result);
   } catch (error) {
-    res.status(400).json(error.message)
+    res.status(400).json({ error: error.message });
   }
-})
+});
 
-module.exports = {productRouter}
+module.exports = { productRouter };
