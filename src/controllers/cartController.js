@@ -1,32 +1,41 @@
-const { Cart,Product } = require("../db");
+const { Cart, Product, User } = require("../db");
 
 const addProductCart = async (product) => {
-  console.log("producto addProductCart", product); 
-    const { name, image, price } = product;
+  console.log("Producto addProductCart:", product);
+  const { name, image, price, usuarioId } = product;
 
-    //busco el producto que coincida con el name 
-    const prod=await Product.findOne({where:{name}});
+  // Buscar el producto que coincida con el name
+  const prod = await Product.findOne({ where: { name } });
+  console.log("prod", prod);
 
-    //si no hay producto con ese name lanzo un error
-    if(!prod) throw Error ("El producto no existe");
+  // Si no hay producto con ese name lanzo un error
+  if (!prod) throw Error("El producto no existe");
 
-    //si los atributos enviados por body existen...
-    if(name && image && price ){
-        //si el producto no esta en el carrito lo agrego, y cambio el atributo in Cart del product a true
-        if(!prod.inCart) {
-          await Cart.create({ prodId:prod.id,name, image, price, amount: 1,order:Date.now() })
-          await prod.update({inCart:true})
-        }
-        //si el prooducto ya esta en el carrito actualizo la cantidad de ese producto 
-        else {
-          const cart=await Cart.findOne({where:{name}})
-          await cart.update({amount:cart.amount+1})
-        } 
-    } 
-    else throw Error ("Faltan datos para añadir el producto al carrito")
+  // Si los atributos enviados por body existen...
+  if (name && image && price) {
+      // Si el producto no está en el carrito, lo agrego y cambio el atributo inCart del producto a true
+      if (!prod.inCart) {
+          await Cart.create({
+              prodId: prod.id, // UUID
+              cartUserId: usuarioId, // UUID del usuario
+              name,
+              image,
+              price,
+              amount: 1,
+              order: Date.now(),
+          });
+          await prod.update({ inCart: true });
+      } else {
+          // Si el producto ya está en el carrito, actualizo la cantidad
+          const cart = await Cart.findOne({ where: { name, cartUserId: usuarioId } }); // Usa el UUID correcto aquí
+          await cart.update({ amount: cart.amount + 1 });
+      }
+  } else throw Error("Faltan datos para añadir el producto al carrito");
 
-    return "producto agregado al carrito";
-}
+  return "Producto agregado al carrito";
+};
+
+
 
 const getProductsCart = async () => {
       const productsCart = await Cart.findAll({order: [['order', 'ASC']]});

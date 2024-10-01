@@ -21,14 +21,17 @@ cartRouter.get('/', async (req,res) => {
 
 cartRouter.post('/', async (req,res) => {
     try {
-        const addProduct=await addProductCart(req.body)
-        res.status(200).json(addProduct)
+    const product = req.body;
+    //const userId = req.user.id || req.body.usuarioconectado.id; // Este ID puede venir del token JWT o de la sesión del usuario    
+    const result = await addProductCart(product);
+    res.status(200).json(result);
     } catch (error) {
         res.status(400).json(error.message) 
     }
 })
 
 cartRouter.delete('/:prodId', async (req,res) => {
+    console.log("delete id", req.params)
     try {
         const deleteProduct = await deleteProductCart(req.params.prodId)
         res.status(200).json(deleteProduct)
@@ -38,7 +41,9 @@ cartRouter.delete('/:prodId', async (req,res) => {
 })
 
 
-cartRouter.delete('/', async (req, res) => {
+cartRouter.delete('/deletecart', async (req, res) => {
+    console.log("delete cart")
+
     try {
       /* Eliminar todo el contenido del carrito */
       await Cart.destroy({ where: {} });

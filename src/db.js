@@ -7,8 +7,6 @@ const {
   DB_USER, DB_PASSWORD, DB_HOST,DB_NAME, DB_PORT
 } = process.env;
 
-//postgresql://postgres:d6ED5aFAd45beda6FbCcBAEB3a1DC5bd@postgres.railway.internal:5432/railway
-
 const sequelize = new Sequelize(`postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}`, {
   
   logging: false, // set to console.log to see the raw SQL queries
@@ -53,10 +51,16 @@ Type.hasMany(Product,{
 })
 Product.belongsTo(Type)
 
-User.hasMany(Cart,{
-  foreignKey:'userId'
-})
-Cart.belongsTo(User);
+// User.hasMany(Cart,{
+//   foreignKey:'userId'
+// })
+// Cart.belongsTo(User);
+
+// En tu archivo de asociaciones (associations.js)
+Cart.belongsTo(User, { foreignKey: 'cartUserId' });
+User.hasMany(Cart, { foreignKey: 'cartUserId' });
+
+
 
 User.hasMany(Order,{
   foreignKey:'userId'
