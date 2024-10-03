@@ -2,11 +2,11 @@ const { Cart, Product, User } = require("../db");
 
 const addProductCart = async (product) => {
   console.log("Producto addProductCart:", product);
-  const { name, image, price, usuarioId } = product;
+  const { name, image, price, user } = product;
 
   // Buscar el producto que coincida con el name
   const prod = await Product.findOne({ where: { name } });
-  console.log("prod", prod);
+  //console.log("prod", prod);
 
   // Si no hay producto con ese name lanzo un error
   if (!prod) throw Error("El producto no existe");
@@ -17,7 +17,7 @@ const addProductCart = async (product) => {
       if (!prod.inCart) {
           await Cart.create({
               prodId: prod.id, // UUID
-              cartUserId: usuarioId, // UUID del usuario
+              cartUserId: user.id, // UUID del usuario
               name,
               image,
               price,
@@ -38,8 +38,14 @@ const addProductCart = async (product) => {
 
 
 const getProductsCart = async () => {
-      const productsCart = await Cart.findAll({order: [['order', 'ASC']]});
+
+  try {
+    const productsCart = await Cart.findAll({order: [['order', 'ASC']]});
       return productsCart;
+  } catch (error) {
+    console.error ("no se han encontrado datos")
+  }
+      
 };
 
 const deleteProductCart=async (prodId) => {

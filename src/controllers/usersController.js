@@ -131,7 +131,7 @@ const loginGoogle = async (req, res) => {
   }
 };
 
-
+//esta ruta se usa para consultar si el usuario existe....
 const getUsers = async () => {
   try {
     const result = await User.findAll();
@@ -207,6 +207,7 @@ const postUserGoogle = async (req, res) => {
   }
 }
 
+//registro de usuarios y verificacion de datos iniciales
 const postUsers = async (req, res) => {
   const infoUser = {}
   const regexName = /^([a-zA-Z ]+)$/i;

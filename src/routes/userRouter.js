@@ -32,10 +32,12 @@ userRouter.put("/:id", async (req, res) => {
 ///////////////////////////// PERMITIR CAMBIO DE CONTRASEÑA Y ENVIO DE MAIL /////////////////////////////
 userRouter.post("/changePass", recuperarPassword)
 
+//ruta para verificar si user existe y si es valida la exp reg...
 userRouter.get("/", async (req, res) => {
   const regex_FullText = /^([a-zA-Z ]+)/i;
 
   const { name } = req.query;
+  console.log("ruta de get/",name)
   let users
 
   try {
