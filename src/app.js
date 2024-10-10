@@ -15,8 +15,8 @@ server.name = 'API';
 // Configuración de MercadoPago
 const ACCESS_TOKEN_MERCADOPAGO = process.env.ACCESS_TOKEN_MERCADOPAGO;
 if (ACCESS_TOKEN_MERCADOPAGO) {
-  mercadopago.configure({
-    access_token: ACCESS_TOKEN_MERCADOPAGO,
+  mercadopagoClient = new mercadopago.MercadoPagoConfig({
+    accessToken: ACCESS_TOKEN_MERCADOPAGO,
   });
 } else {
   console.error("Error: ACCESS_TOKEN_MERCADOPAGO no está definido en el archivo .env");
@@ -29,6 +29,8 @@ server.use(morgan('dev')); // middleware de registro de solicitudes HTTP para No
 const corsOptions = {
   origin: function (origin, callback) {
     const whitelist = [
+      "http://localhost:5173",
+      "https://elgatonegropremium.netlify.app",
       'https://elgatonegropremium.netlify.app/',  // Netlify
       'https://elgatonegropremium-back-production.up.railway.app',          // Railway
       'https://api.mercadopago.com',            // MercadoPago

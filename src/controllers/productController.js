@@ -1,7 +1,7 @@
 const { Product, User, Type, Brand } = require("../db");
 const {Op} = require('sequelize')
 const {uploadImage, deleteImage}=require('../utils/cloudinary')
-const fs =require('fs-extra');
+const fs = require('fs-extra');
 
 const postTypeProductForAdmin = async (name) => {
   try {

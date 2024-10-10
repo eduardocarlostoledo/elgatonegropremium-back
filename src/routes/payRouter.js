@@ -64,7 +64,7 @@ payRouter.post("/create_preference", (req, res) => {
     product_description: req.body.description,
   };
 
-  mercadopago.preferences
+  mercadopago.Preference
     .create(preference)
     .then(function (response) {
       res.send({
