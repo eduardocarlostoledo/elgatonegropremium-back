@@ -174,8 +174,7 @@ const getProductName = async (product) => {
         price:p.price,
         description: p.description,
         type: p.type.name,
-        brand: p.brand.name,
-        inCart:p.inCart,
+        brand: p.brand.name,        
         stock:p.stock,
         reviews:p.reviews,
         calification:p.calification,
@@ -339,6 +338,7 @@ const BuildSearch = async (socket) => {
 };
 
 const putReview = async (productId,review) => {
+  console.log("PUT REVIEW", productId, review)
   //busco el producto con el id recibido por parametro
   let product = await Product.findByPk(productId);
 
@@ -352,7 +352,10 @@ const putReview = async (productId,review) => {
   const totalCalifications=product.reviews.reduce((acc, review) => acc + review.calification, 0) + review.calification
 
   //actualizo el producto
-  await product.update({reviews:[...product.reviews,review], calification:(totalCalifications/totalReviews).toFixed(1)});
+  await product.update({
+    reviews: [...product.reviews, review],
+    calification: (totalCalifications / totalReviews).toFixed(1),
+  });
 
   return "The review was added";
 }

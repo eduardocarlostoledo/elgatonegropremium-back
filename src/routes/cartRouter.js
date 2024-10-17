@@ -4,9 +4,11 @@ const {
     addProductCart,
     deleteProductCart,
     deleteAllCart,
+    getCarritoDeUsuario,
 } = require('../controllers/cartController')
 
 const { Cart,Product } = require("../db");
+const { verificaToken } = require('../helpers/verificaToken');
 
 const cartRouter = Router()
 
@@ -21,9 +23,8 @@ cartRouter.get('/', async (req,res) => {
 
 cartRouter.post('/', async (req,res) => {
     try {
-    const product = req.body;
-    //const userId = req.user.id || req.body.usuarioconectado.id; // Este ID puede venir del token JWT o de la sesión del usuario    
-    const result = await addProductCart(product);
+    //console.log(req.body)
+    const result = await addProductCart(req.body);
     res.status(200).json(result);
     } catch (error) {
         res.status(400).json(error.message) 
@@ -57,5 +58,16 @@ cartRouter.delete('/deletecart', async (req, res) => {
         res.status(400).json(error.message) 
     }
   });
+
+  cartRouter.get("/getcartclient/:userId",verificaToken, async(req, res) =>{
+    try {
+        const {userId} = req.params;
+        const carritoCliente = await getCarritoDeUsuario(userId)
+        res.status(200).json(carritoCliente);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+
+    }
+  })
 
 module.exports={cartRouter};

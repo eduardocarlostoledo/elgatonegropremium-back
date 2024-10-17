@@ -7,6 +7,10 @@ module.exports = (sequelize)=>{
             autoIncrement: true,            
             primaryKey: true,
         },
+        userId :{
+            type: DataTypes.BIGINT,                    
+            primaryKey: true,
+        },
         product_description:{
             type:DataTypes.TEXT,
             allowNull:false,

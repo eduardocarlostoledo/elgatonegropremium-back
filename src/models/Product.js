@@ -51,12 +51,7 @@ module.exports = (sequelize) => {
           })
         ),
         defaultValue: [],
-      },
-      inCart: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
-      },
+      },      
       status: {
         type: DataTypes.BOOLEAN,
         defaultValue: true,

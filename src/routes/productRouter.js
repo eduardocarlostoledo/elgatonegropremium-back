@@ -152,7 +152,7 @@ productRouter.get('/:name', async (req, res) => {
 
 // Ruta para añadir review
 productRouter.put('/review/:id', 
-  verificaToken, verifyAdmin, 
+  verificaToken,  
   async (req, res) => {
   try {
     const { id } = req.params;
