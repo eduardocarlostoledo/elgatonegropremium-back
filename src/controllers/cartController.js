@@ -1,23 +1,29 @@
 const { Cart, Product, User } = require("../db");
 
 const addProductCart = async (payload) => {
-  const {name, user, amount} = payload
-  console.log("Producto addProductCart:", name, user.email, amount);   
+  const { name, user, amount } = payload;
+  console.log("Producto addProductCart:", name, user.email, amount);
+  
   const cantidadFinal = amount > 0 ? amount : 1;
   const prod = await Product.findOne({ where: { name } });
   const esUsuario = await User.findOne({ where: { id: user.id } });
   const tieneCarrito = await Cart.findOne({ where: { cartUserId: user.id } });
 
-  if (!prod) throw Error("El producto no existe");  
+  if (!prod) throw Error("El producto no existe");
   if (!esUsuario) throw Error("Debe registrarse para comprar");
-//depuradores
-  if (prod) console.log("producto encontrado")
-  if (esUsuario) console.log("es usuario valido")
-  if (!tieneCarrito) console.log("no tiene carrito")
-    if(tieneCarrito) console.log ("tiene carrito")
+
+  // Depuración
+  console.log("producto encontrado", prod?.dataValues?.id || "no encontrado");
+  console.log("es usuario valido", esUsuario ? "sí" : "no");
+  console.log("tiene carrito", tieneCarrito ? "sí" : "no");
+
+  // Comprobar stock antes de cualquier acción
+  if (prod.dataValues.stock < cantidadFinal) {
+    throw Error("Stock insuficiente para la cantidad solicitada");
+  }
 
   // Crear carrito si no existe
-  if (!tieneCarrito && prod.stock >= cantidadFinal) {
+  if (!tieneCarrito) {
     await Cart.create({
       cartUserId: esUsuario.id,
       cartProducts: [
@@ -26,7 +32,7 @@ const addProductCart = async (payload) => {
           name: prod.name,
           image: prod.image,
           price: prod.price,
-          amount: cantidadFinal, // Utilizamos la cantidad proporcionada
+          amount: cantidadFinal,
         },
       ],
       order: Date.now(),
@@ -35,38 +41,103 @@ const addProductCart = async (payload) => {
   }
 
   // Si el carrito ya existe, actualizarlo
-  if (tieneCarrito) {
-    console.log("entro a tiene carrito", tieneCarrito.cartProducts)
-    const cartProducts = tieneCarrito.cartProducts;
+  console.log("Actualizando carrito existente");
 
-    // Verificar si el producto ya está en el carrito
-    const productIndex = cartProducts.findIndex((item) => item.prodId === prod.id);
-
-
-    if (productIndex !== -1) {
-      // Si el producto ya está en el carrito, aumentar la cantidad
-      cartProducts[productIndex].amount += cantidadFinal;
-    } else {
-      // Si el producto no está, agregarlo con la cantidad proporcionada
-      cartProducts.push({
-        prodId: prod.id,
-        name: prod.name,
-        image: prod.image,
-        price: prod.price,
-        amount: cantidadFinal, // Cantidad proporcionada o 1 por defecto
-      });
+  // Verificar si el producto ya está en el carrito
+  const productIndex = tieneCarrito.cartProducts.findIndex(
+    (item) => item.prodId === prod.dataValues.id
+  );
+  
+  if (productIndex !== -1) {
+    // Si el producto ya está en el carrito, aumentar la cantidad
+    const nuevaCantidad = tieneCarrito.cartProducts[productIndex].amount + cantidadFinal;
+    if (nuevaCantidad > prod.dataValues.stock) {
+      throw Error("Se ha superado el stock disponible");
     }
-
-    // Actualizar el carrito con los productos nuevos
-    await tieneCarrito.update({ cartProducts });
-    return tieneCarrito;
+    tieneCarrito.cartProducts[productIndex].amount = nuevaCantidad;
+  } else {
+    // Si el producto no está en el carrito, agregarlo
+    tieneCarrito.cartProducts.push({
+      name: prod.dataValues.name,
+      image: prod.dataValues.image,
+      price: prod.dataValues.price,
+      amount: cantidadFinal,
+      prodId: prod.dataValues.id,
+    });
   }
 
-  // Si el stock del producto es insuficiente
-  if (prod.stock < cantidadFinal) {
-    throw Error("Stock insuficiente para la cantidad solicitada");
-  }
+  // Actualizar el carrito con los productos nuevos
+  await tieneCarrito.update({ cartProducts: tieneCarrito.cartProducts });
+  return tieneCarrito;
 };
+
+
+// const addProductCart = async (payload) => {
+//   const {name, user, amount} = payload
+//   console.log("Producto addProductCart:", name, user.email, amount);   
+//   const cantidadFinal = amount > 0 ? amount : 1;
+//   const prod = await Product.findOne({ where: { name } });
+//   const esUsuario = await User.findOne({ where: { id: user.id } });
+//   const tieneCarrito = await Cart.findOne({ where: { cartUserId: user.id } });
+
+//   if (!prod) throw Error("El producto no existe");  
+//   if (!esUsuario) throw Error("Debe registrarse para comprar");
+// //depuradores
+//   if (prod) console.log("producto encontrado", prod.dataValues.id)
+//   if (esUsuario) console.log("es usuario valido")
+//   if (!tieneCarrito) console.log("no tiene carrito")
+//     if(tieneCarrito) console.log ("tiene carrito")
+
+//   // Crear carrito si no existe
+//   if (!tieneCarrito && prod.dataValues.stock >= cantidadFinal) {
+//     await Cart.create({
+//       cartUserId: esUsuario.id,
+//       cartProducts: [
+//         {
+//           prodId: prod.id,
+//           name: prod.name,
+//           image: prod.image,
+//           price: prod.price,
+//           amount: cantidadFinal, // Utilizamos la cantidad proporcionada
+//         },
+//       ],
+//       order: Date.now(),
+//     });
+//     return "Producto agregado al carrito";
+//   }
+
+//   // Si el carrito ya existe, actualizarlo
+//   if ( tieneCarrito && prod.dataValues.stock >= cantidadFinal && esUsuario ) {
+//     console.log("entro a tiene carrito", tieneCarrito.cartProducts)    
+
+//     // Verificar si el producto ya está en el carrito
+//     const productIndex = tieneCarrito.cartProducts.findIndex((item) => item.prodId === prod.dataValues.id);
+//     if (productIndex !== -1) {
+//       // Si el producto ya está en el carrito, aumentar la cantidad
+//       tieneCarrito.cartProducts[productIndex].amount += cantidadFinal;
+//       if (prod.dataValues.stock > tieneCarrito.cartProducts[productIndex].amount) throw Error ("Se ha superado el stock")
+//     } else {
+//   console.log("el producto no esta en el carrito")
+//       // Si el producto no está, agregarlo con la cantidad proporcionada
+//       tieneCarrito.cartProducts.push({
+//         name: prod.dataValues.name,
+//         image: prod.dataValues.image,
+//         price: prod.dataValues.price,
+//         amount: cantidadFinal, // Cantidad proporcionada o 1 por defecto
+//         prodId: prod.dataValues.id,
+//       });
+//     }
+
+//     // Actualizar el carrito con los productos nuevos
+//     await tieneCarrito.update({ cartProducts: tieneCarrito.cartProducts });
+//     return tieneCarrito;
+//   }
+
+//   // Si el stock del producto es insuficiente
+//   if (prod.dataValues.stock < cantidadFinal) {
+//     throw Error("Stock insuficiente para la cantidad solicitada");
+//   }
+// };
 
 const getProductsCart = async () => {
   try {

@@ -1,4 +1,6 @@
 const { Router } = require('express');
+const jwt = require('jsonwebtoken');
+
 const { 
     getProductsCart,
     addProductCart,
@@ -60,9 +62,12 @@ cartRouter.delete('/deletecart', async (req, res) => {
   });
 
   cartRouter.get("/getcartclient/:userId",verificaToken, async(req, res) =>{
-    try {
-        const {userId} = req.params;
-        const carritoCliente = await getCarritoDeUsuario(userId)
+    try {               
+    const token = req.headers['authorization']?.split(' ')[1];
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+    console.log("asd",decoded)
+        
+        const carritoCliente = await getCarritoDeUsuario(decoded.userId)
         res.status(200).json(carritoCliente);
     } catch (error) {
         res.status(400).json({ error: error.message });

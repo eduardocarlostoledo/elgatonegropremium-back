@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 const verificaToken = async (req, res, next) => {
-  console.log("Verificando token en middleware", req.headers);
+  //console.log("Verificando token en middleware", req.headers);
   
   // Extraer el token del header "Authorization"
   const token = req.headers['authorization']?.split(' ')[1]; // "Bearer <token>"
