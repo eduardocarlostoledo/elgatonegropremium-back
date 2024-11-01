@@ -12,8 +12,8 @@ RUN npm install --only=production
 # Copia el resto de la aplicación al contenedor
 COPY . .
 
-# Copia el archivo .env si lo necesitas en el entorno del contenedor
-COPY .env .env
+# # Copia el archivo .env si lo necesitas en el entorno del contenedor
+# COPY .env .env
 
 # Expone el puerto en el que corre tu aplicación (usualmente el 3000 para Express)
 EXPOSE 3000
