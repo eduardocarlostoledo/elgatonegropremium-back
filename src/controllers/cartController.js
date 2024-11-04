@@ -158,47 +158,94 @@ const getCarritoDeUsuario = async (userId) => {
   }
 }
 
+// const deleteProductCart = async (prodId, user) => {
+//   const prod = await Product.findOne({ where: { id: prodId } });
+//   if (!prod) throw Error("El producto no existe");
+
+//   const esUsuario = await User.findOne({ where: { id: user.id } });
+//   if (!esUsuario) throw Error("El usuario no existe");
+
+//   const tieneCarrito = await Cart.findOne({ where: { cartUserId: user.id } });
+//   if (!tieneCarrito) throw Error("El usuario no posee carritos para eliminar");
+
+//   let productosEnCarrito = tieneCarrito.cartProducts;
+
+//   const productIndex = productosEnCarrito.findIndex((item) => item.prodId === prodId);
+//   if (productIndex === -1) throw Error("El producto no está en el carrito");
+
+//   if (productosEnCarrito[productIndex].amount > 1) {
+//     // Reducir la cantidad en 1
+//     productosEnCarrito[productIndex].amount -= 1;
+//   } else {
+//     // Si tiene exactamente 1, eliminar el producto del array
+//     productosEnCarrito.splice(productIndex, 1);
+//   }
+
+//   await tieneCarrito.update({ cartProducts: productosEnCarrito });
+//   return "Se ha modificado el carrito";
+// };
+
 const deleteProductCart = async (prodId, user) => {
-  const prod = await Product.findOne({ where: { id: prodId } });
-  if (!prod) throw Error("El producto no existe");
+  // Verificar existencia del producto y usuario en una consulta paralela
+  const [prod, esUsuario] = await Promise.all([
+    Product.findOne({ where: { id: prodId } }),
+    User.findOne({ where: { id: user.id } })
+  ]);
 
-  const esUsuario = await User.findOne({ where: { id: user.id } });
-  if (!esUsuario) throw Error("El usuario no existe");
+  if (!prod) throw new Error("El producto no existe");
+  if (!esUsuario) throw new Error("El usuario no existe");
 
+  // Buscar el carrito del usuario
   const tieneCarrito = await Cart.findOne({ where: { cartUserId: user.id } });
-  if (!tieneCarrito) throw Error("El usuario no posee carritos para eliminar");
+  if (!tieneCarrito) throw new Error("El usuario no posee carritos para eliminar");
 
+  // Obtener productos y buscar el índice del producto en el carrito
   let productosEnCarrito = tieneCarrito.cartProducts;
+  const productIndex = productosEnCarrito.findIndex(item => item.prodId === prodId);
 
-  const productIndex = productosEnCarrito.findIndex((item) => item.prodId === prodId);
-  if (productIndex === -1) throw Error("El producto no está en el carrito");
+  if (productIndex === -1) throw new Error("El producto no está en el carrito");
 
+  // Reducir cantidad o eliminar el producto si solo queda 1
   if (productosEnCarrito[productIndex].amount > 1) {
-    // Reducir la cantidad en 1
     productosEnCarrito[productIndex].amount -= 1;
   } else {
-    // Si tiene exactamente 1, eliminar el producto del array
     productosEnCarrito.splice(productIndex, 1);
   }
 
+  // Actualizar el carrito en la base de datos
   await tieneCarrito.update({ cartProducts: productosEnCarrito });
   return "Se ha modificado el carrito";
 };
 
+
+// const deleteAllCart = async (user) => {
+//   try {
+//     const tieneCarrito = await Cart.findOne({ where: { cartUserId: user.id } });
+
+//     if (!tieneCarrito) {
+//       throw Error("No hay carrito para este usuario");
+//     } else {
+//       await Cart.destroy({ where: { cartUserId: user.id } });
+//       return "El carrito se eliminó";
+//     }
+//   } catch (error) {
+//     console.error("Ha surgido un inconveniente en la base de datos");
+//   }
+// };
+
 const deleteAllCart = async (user) => {
   try {
     const tieneCarrito = await Cart.findOne({ where: { cartUserId: user.id } });
+    if (!tieneCarrito) throw new Error("No hay carrito para este usuario");
 
-    if (!tieneCarrito) {
-      throw Error("No hay carrito para este usuario");
-    } else {
-      await Cart.destroy({ where: { cartUserId: user.id } });
-      return "El carrito se eliminó";
-    }
+    await Cart.destroy({ where: { cartUserId: user.id } });
+    return "El carrito se eliminó";
   } catch (error) {
-    console.error("Ha surgido un inconveniente en la base de datos");
+    console.error("Error eliminando el carrito:", error.message);
+    throw new Error("Ha surgido un inconveniente en la base de datos");
   }
 };
+
 
 module.exports = {
   deleteAllCart,

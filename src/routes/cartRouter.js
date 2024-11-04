@@ -45,15 +45,14 @@ cartRouter.delete('/:prodId', async (req,res) => {
 
 
 cartRouter.delete('/deletecart', async (req, res) => {
-    console.log("delete cart")
-
+    
+const {user} = req.body.userActive
+console.log("delete cart", user)    
     try {
       /* Eliminar todo el contenido del carrito */
-      await Cart.destroy({ where: {} });
+      await deleteAllCart(user);
   
-      /* Actualizar la columna 'inCart' de todos los productos a false */
-      await Product.update({ inCart: false }, { where: {} });
-  
+      
       /* Devolver una respuesta exitosa */
       return res.status(200).json({ message: 'El carrito ha sido eliminado' });
     } catch (error) {
