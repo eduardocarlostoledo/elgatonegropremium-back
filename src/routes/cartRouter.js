@@ -46,7 +46,7 @@ cartRouter.delete('/:prodId', async (req,res) => {
 
 cartRouter.delete('/deletecart', async (req, res) => {
     
-const {user} = req.body.userActive
+const {user} = req.body.payload
 console.log("delete cart", user)    
     try {
       /* Eliminar todo el contenido del carrito */
