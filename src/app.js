@@ -93,6 +93,9 @@ server.use(
 const corsOptions = {
   origin: function (origin, callback) {
     const whitelist = [
+      "https://elgatonegropremium-back-production.up.railway.app/users/auth/google",
+      "https://accounts.google.com/o/oauth2/v2/auth/oauthchooseaccount",
+      "http://localhost:3001/users/auth/google",
       "https://accounts.google.com",
       "http://localhost:5173",
       "https://localhost",

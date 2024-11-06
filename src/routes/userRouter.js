@@ -42,9 +42,9 @@ userRouter.get(
   passport.authenticate("google", { failureRedirect: "/" }),
   (req, res) => {
     // Redirige al usuario a la página deseada tras un inicio de sesión exitoso
-    res.redirect("/dashboard");
-  }
-);
+    res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=http://localhost:3001/auth/google/callback&scope=profile%20email&client_id=YOUR_CLIENT_ID`);
+  });
+  
 
 // Ruta de logout
 userRouter.get("/logout", (req, res) => {
