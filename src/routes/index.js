@@ -5,6 +5,7 @@ const {cartRouter}=require("./cartRouter.js")
 const {filterRouter} = require("./filterRouter")
 const {payRouter} = require("./payRouter.js")
 const {orderRouter} = require("./orderRouter.js")
+const {googleRouter} = require("./googleRouter.js")
 // Importar todos los routers;
 // Ejemplo: const authRouter = require('./auth.js');
 
@@ -19,6 +20,6 @@ router.use('/cart', cartRouter)
 router.use('/filter',filterRouter)
 router.use('/pay', payRouter)
 router.use("/order", orderRouter)
-// router.use('/users', userRouter)
+router.use('/auth', googleRouter)
 
 module.exports = router;

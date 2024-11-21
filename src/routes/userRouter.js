@@ -1,5 +1,5 @@
 const { Router } = require("express");
-const passport=require("passport");
+
 const {
   putUser,
   getUsers,
@@ -29,22 +29,6 @@ userRouter.post("/google", postUserGoogle); // users/google
 userRouter.post("/login", loginUser);
 userRouter.post("/loginGoogle", loginGoogle);
 
-userRouter.get(
-  "/auth/google",
-  passport.authenticate("google", {
-    scope: ["profile", "email"],
-  })
-);
-
-// Ruta de callback para Google
-userRouter.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/" }),
-  (req, res) => {
-    // Redirige al usuario a la página deseada tras un inicio de sesión exitoso
-    res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=http://localhost:3001/auth/google/callback&scope=profile%20email&client_id=YOUR_CLIENT_ID`);
-  });
-  
 
 // Ruta de logout
 userRouter.get("/logout", (req, res) => {

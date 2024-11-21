@@ -6,10 +6,10 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const cors = require("cors");
 const fileUpload = require("express-fileupload");
 const morgan = require("morgan");
-const helmet = require("helmet"); // Importa helmet
+const helmet = require("helmet");
 const mercadopago = require("mercadopago");
-
 const routes = require("./routes/index.js");
+// const crypto = require('crypto');
 require("./db.js");
 
 const server = express();
@@ -27,172 +27,121 @@ if (ACCESS_TOKEN_MERCADOPAGO) {
   );
 }
 
-// Middleware de seguridad - Helmet
+// Variables para URLs comunes
+const whitelist = [
+  "localhost:5173",
+  "localhost:3001",
+  "http://localhost:3001",
+  "http://localhost:5173",
+  "https://elgatonegropremium.netlify.app",
+  "https://elgatonegropremium-back-production.up.railway.app",
+  "https://api.mercadopago.com",
+  "https://sdk.mercadopago.com",
+  "https://apis.google.com",
+  "https://accounts.google.com",
+  "https://csp.withgoogle.com/csp/identity-sign-in-google-http",
+  "https://sweetalert.js.org",
+  "https://fonts.googleapis.com",
+  "https://cdn.jsdelivr.net",
+  "https://res.cloudinary.com",
+  "https://fonts.gstatic.com",
+  "https://www.mercadopago.com",
+];
+
+// server.use((req, res, next) => {
+//   // Generar un nonce único para cada solicitud
+//   res.locals.nonce = crypto.randomBytes(16).toString('base64');
+//   next();
+// });
+
+// Middleware de seguridad
 server.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
-        defaultSrc: ["'self'"],
+        defaultSrc: ["'self'", ...whitelist],
         scriptSrc: [
           "'self'",
-          "https://ajax.googleapis.com", // jQuery desde Google CDN
-          "https://sdk.mercadopago.com", // SDK de MercadoPago
-          "https://accounts.google.com", // Google Sign-In
-          "https://cdn.jsdelivr.net", // Bootstrap desde jsDelivr
-          "https://unpkg.com", // Ionicons desde unpkg
-          "https://opencollective.com/babel",
-          "https://github.com",
-          "https://eslint.org",
-          "https://vitejs.dev",
-          "https://cdn-icons-png.flaticon.com",
-          "https://wa.me", // WhatsApp
-          "https://login.live.com", // Microsoft Login
+          "'unsafe-inline'", // Úsalo solo si es estrictamente necesario          
+          // `'nonce-${res.locals.nonce}'`, // Nonce dinámico
+          ...whitelist,
         ],
-        styleSrc: [
-          "'self'",
-          "https://cdn.jsdelivr.net", // Bootstrap CSS desde jsDelivr
-          "https://fonts.googleapis.com", // Google Fonts
-        ],
-        imgSrc: [
-          "'self'",
-          "data:", // Permite cargar imágenes en línea
-          "https://elgatonegropremium.netlify.app", // Imágenes locales
-          "https://res.cloudinary.com", // Cloudinary
-          "https://cdn-icons-png.flaticon.com",
-          "https://www.instagram.com",
-          "https://www.facebook.com",
-          "https://web.whatsapp.com",
-        ],
-        connectSrc: [
-          "'self'",
-          "https://api.mercadopago.com",
-          "https://elgatonegropremium-back-production.up.railway.app", // Backend API
-          "https://opencollective.com",
-          "https://www.robotstxt.org",
-          "https://www.instagram.com",
-          "https://web.whatsapp.com",
-          "https://wa.me",
-        ],
-        fontSrc: [
-          "'self'",
-          "https://fonts.gstatic.com", // Google Fonts
-          "https://cdn.jsdelivr.net", // Fuentes de Bootstrap desde jsDelivr
-        ],
-        frameSrc: [
-          "https://www.mercadopago.com", // iframes de MercadoPago
-          "https://login.live.com", // Microsoft Login
-        ],
-        objectSrc: ["'none'"], // Bloquea elementos <object>
-        mediaSrc: ["'self'", "https://res.cloudinary.com"], // Permite solo contenido multimedia desde Cloudinary
+        styleSrc: ["'self'", "'unsafe-inline'", ...whitelist],
+        imgSrc: ["'self'", "data:", ...whitelist],
+        connectSrc: ["'self'", ...whitelist],
+        fontSrc: ["'self'", "https:", "data:", ...whitelist],
+        frameSrc: ["'self'", ...whitelist],
+        objectSrc: ["'none'"], // Más seguro: bloquea objetos embebidos
+        upgradeInsecureRequests: [], // Vacío porque es booleano implícito
+        baseUri: ["'self'"], // Directiva separada
+        reportUri: ["https://csp.withgoogle.com/csp/identity-sign-in-google-http"], // Reporte de CSP
       },
     },
+    // contentSecurityPolicy: false, // Opcional, si necesitas más flexibilidad.
   })
 );
 
+//esto es para que no exista colision entre helmet y el inicio de sesion de google que requiere permisos "especiales"
+server.use ( (req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com"  
+  );
+next();
+})
+
+server.use(helmet.noSniff());
+server.use(helmet.frameguard({ action: "deny" }));
+server.use(
+  helmet.hsts({
+    maxAge: 31536000, // 1 año
+    includeSubDomains: true,
+  })
+);
+server.use(helmet.hidePoweredBy());
+
 // Configuración de CORS
 const corsOptions = {
-  origin: function (origin, callback) {
-    const whitelist = [
-      "https://elgatonegropremium-back-production.up.railway.app/users/auth/google",
-      "https://accounts.google.com/o/oauth2/v2/auth/oauthchooseaccount",
-      "http://localhost:3001/users/auth/google",
-      "https://accounts.google.com",
-      "http://localhost:5173",
-      "https://localhost",
-      "https://elgatonegropremium.netlify.app",
-      "https://sdk.mercadopago.com",
-      "https://accounts.google.com",
-      "https://cdn.jsdelivr.net",
-      "https://opencollective.com",
-      "https://github.com",
-      "https://eslint.org",
-      "https://vitejs.dev",
-      "https://www.instagram.com",
-      "https://www.facebook.com",
-      "https://web.whatsapp.com",
-      "https://cdn-icons-png.flaticon.com",
-      "https://wa.me",
-      "https://login.live.com",
-      "https://elgatonegropremium-back-production.up.railway.app",
-      "https://res.cloudinary.com",
-      "https://api.mercadopago.com", // MercadoPago
-      "https://www.mercadolibre.com", // MercadoLibre
-      "https://www.google.com", // Google
-    ];
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
-      callback(
-        null,
-        true,
-        console.log("peticion de origen aceptada desde ", origin)
-      );
+  origin: (origin, callback) => {
+    if (!origin || whitelist.includes(origin)) {
+      console.log(`CORS permitido para ${origin}`);
+      callback(null, true);
     } else {
-      callback(new Error("No permitida por CORS", origin));
+      console.error(`CORS rechazado para ${origin}`);
+      callback(new Error("No permitido por CORS"));
     }
   },
   credentials: true,
 };
 server.use(cors(corsOptions));
 
-// Middleware de carga de archivos
-server.use(
-  fileUpload({
-    useTempFiles: true,
-    tempFileDir: "./uploads",
-  })
-);
+// Otros middlewares
+// server.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+server.use(express.json());
+server.use(express.urlencoded({ extended: false }));
+server.use(fileUpload({ useTempFiles: true, tempFileDir: "./uploads" }));
 
-// Middleware de registro de solicitudes HTTP con Morgan
-server.use(morgan("dev"));
-
-// Definir un token personalizado para el ID de la solicitud
-morgan.token("id", function (req) {
-  return req.id;
-});
-
-// Condicional para definir la instancia de desarrollo
-if (process.env.NODE_ENV === "production") {
-  server.use(morgan("combined"));
-} else {
-  server.use(morgan("dev"));
-}
-
-// Configurar Morgan con un formato personalizado
-server.use(
-  morgan(":id :method :url :status :response-time ms - :res[content-length]")
-);
-
-// Middleware para agregar un ID único a cada solicitud
+// Middleware para agregar un ID único a las solicitudes
 server.use((req, res, next) => {
   req.id = Math.random().toString(36).substring(7);
   next();
 });
 
-// Middlewares de Express para parsear JSON y datos URL-encoded
-server.use(express.json());
-server.use(express.urlencoded({ extended: false }));
-
-// Middleware global para validar URL
-const validateUrlMiddleware = (req, res, next) => {
-  if (req.body.url) {
-    const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
-    if (!urlRegex.test(req.body.url)) {
-      return res.status(400).json({ error: "Invalid URL" });
-    }
+// Validación global de URLs
+server.use((req, res, next) => {
+  if (req.body.url && !/^(ftp|http|https):\/\/[^ "]+$/.test(req.body.url)) {
+    return res.status(400).json({ error: "Invalid URL" });
   }
   next();
-};
+});
 
-// Aplicar validación de URL a nivel global
-server.use(validateUrlMiddleware);
-
-// Rutas
-server.use("/", routes);
-
+// Sesiones y autenticación con Passport
 server.use(
   session({
     secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: true,
+    cookie: { sameSite: "None", secure: true },
   })
 );
 server.use(passport.initialize());
@@ -203,30 +152,23 @@ passport.use(
     {
       clientID: process.env.CLIENT_ID_LOGIN,
       clientSecret: process.env.CLIENT_SECRET,
-      callbackURL: "/auth/google/callback",
+      callbackURL: "/auth/callback",
     },
-    (accessToken, refreshToken, profile, done) => {
-      // Aquí puedes guardar el perfil del usuario en la base de datos o sesión
-      return done(null, profile);
-    }
+    (accessToken, refreshToken, profile, done) => done(null, profile)
   )
 );
 
-passport.serializeUser((user, done) => {
-  done(null, user);
-});
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((user, done) => done(null, user));
 
-passport.deserializeUser((user, done) => {
-  done(null, user);
-});
+// Rutas
+server.use("/", routes);
 
-// Middleware para manejo de errores
+// Manejo de errores
 server.use((err, req, res, next) => {
-  // eslint-disable-line no-unused-vars
   const status = err.status || 500;
-  const message = err.message || err;
   console.error(err);
-  res.status(status).send(message);
+  res.status(status).send(err.message || "Error interno del servidor");
 });
 
 module.exports = server;

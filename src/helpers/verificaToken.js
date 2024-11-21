@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 const verificaToken = async (req, res, next) => {
-  //console.log("Verificando token en middleware", req.headers);
+//console.log("Verificando token en middleware", req.headers);
   
   // Extraer el token del header "Authorization"
   const token = req.headers['authorization']?.split(' ')[1]; // "Bearer <token>"
@@ -14,7 +14,7 @@ const verificaToken = async (req, res, next) => {
     // Verificar y decodificar el token
     const decoded = await jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded; // Almacenar la información del usuario decodificada
-    console.log("token confirmado req.user", req.user)
+    //console.log("token confirmado req.user", req.user)
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {

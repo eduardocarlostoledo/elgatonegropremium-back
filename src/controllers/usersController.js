@@ -54,50 +54,13 @@ const loginUser = async (req, res) => {
     return res.json({ msg: `Error 404 - ${error.message}` });
   }
 };
-// const loginUser = async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-//     const user = await User.findOne({ where: { email: `${email}` } });
-//     if (!user) return res.json({ msg: 'User not found', success: false, });
-
-//     const checkPassword = await compare(password, user.password);
-
-//     if (checkPassword) {
-//       res.status(200).send({
-//         data: user,
-//         success: true,
-//       });
-//     }
-//     if (!checkPassword) {
-//       return res.json({ msg: 'Invalid password', success: false, });
-
-
-//     }
-//   } catch (error) {
-//     return res.json({ msg: `Error 404 - ${error}` });
-//   }
-// };
-
-// const loginGoogle = async (req, res) => {
-//   try {
-//     const { email } = req.body;
-//     const user = await User.findOne({ where: { email: `${email}` } });
-
-//     res.status(200).send({
-//       data: user,
-//       success: true,
-//     });
-
-
-//   } catch (error) {
-//     return res.json({ msg: `Error 404 - ${error}` }); s
-//   }
-// }
 
 const loginGoogle = async (req, res) => {
+  //console.log("login google", req.body)
   try {
     const { email } = req.body;
     const user = await User.findOne({ where: { email } });
+    //console.log(user)
     if (!user) {
       return res.json({ msg: 'User not found', success: false });
     }
@@ -109,6 +72,7 @@ const loginGoogle = async (req, res) => {
         email: user.email,
         name: user.name,
         admin: user.admin,
+        status: user.status,
       },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
@@ -119,10 +83,17 @@ const loginGoogle = async (req, res) => {
       msg: 'Login successful',
       token,
       user: {
+        token,
         id: user.id,
         name: user.name,
+        lastname: user.lastname,
+        image: user.image,
+        phonenumber: user.phonenumber,
+        country: user.country,
+        city: user.city,
         email: user.email,
         admin: user.admin,
+        status: user.status,
       },
       success: true,
     });
@@ -185,22 +156,24 @@ const putUser = async (user, image, id) => {
 }
 
 const postUserGoogle = async (req, res) => {
+  console.log("post user google", req.body)
   try {
     const { name, lastname, email, image } = req.body;
     if (!name || !lastname || !email) return res.json({ msg: 'Missing required fields', success: false });
+    
+    const userBD = await User.findOne({ where: { email: `${email}` } });
+    if (userBD) {
+    return res.json({ msg: 'The email already exists', success: false  });
+    }
 
-    // const userBD = await User.findOne({ where: { email: `${email}` } });
-    // if (userBD) {
-    //   return res.json({ msg: 'The email already exists', success: false  });
-    // }
-    await User.create({
+    const user = await User.create({
       name: name,
       lastname: lastname,
       email: email,
       image: { public_id: null, secure_url: image },
       password: "XDRWQDFF11asedfa123"
     });
-    return res.json({ msg: `User create succesfully`, success: true });
+    return res.json({ msg: `User create succesfully`, success: true, user });    
 
   } catch (error) {
     return res.json({ msg: `Error 404 - ${error}` });
