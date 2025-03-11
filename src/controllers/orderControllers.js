@@ -1,3 +1,4 @@
+const { where } = require("sequelize");
 const { Order, Product, User } = require("../db");
 
 
@@ -39,6 +40,19 @@ const postOrder = async (
     product_unit_price) => {  
 
   try {    
+
+    console.log("datos de la orden", paymentId,
+      statusId,
+      merchantOrderId,
+      product_description,     
+      total_order_price,      
+      prodId,
+      buyer_email,
+      product_name,
+      product_image,
+      product_amount,
+      product_unit_price);
+
     const newOrder = await Order.create({
         paymentId,
         statusId,
@@ -52,12 +66,7 @@ const postOrder = async (
         product_amount,
         product_unit_price
     });
-
-    const user=await User.findOne({where:{email:buyer_email}})
-    user.addOrder(newOrder);
-
     console.log("POST CONTROLLER CREATED ORDER", newOrder);
-
     return newOrder;
   } catch (error) {
     throw Error(error.message);
@@ -66,11 +75,53 @@ const postOrder = async (
 
 const getOrders = async () => {
   try {
-    const allorders = await Order.findAll();     
+    let allorders = await Order.findAll();     
+    // const result = allorders.map((order) => {
+    //   return {
+    //     id: order.id,
+    //     userId: order.userId,     
+    //     buyer_email: order.buyer_email,
+    //     buyer_name: order.buyer_name,
+    //     buyer_lastname: order.buyer_lastname,
+    //     buyer_phone: order.buyer_phone,
+    //     buyer_address: order.buyer_address,    
+    //     products: order.products,    
+    //     total_order_price: order.total_order_price,
+    //     payment_id: order.payment_id,
+    //     merchant_order_id: order.merchant_order_id,
+    //     status: order.statusId,
+    //     estadoEnvio: order.estadoEnvio,
+    //     createdAt: order.createdAt,        
+    //     total_order_price: order.total_order_price,
+    //     payment_type: order.payment_type,
+    //   };
+    // }
+    // );
+    // return result;
+    
+    if (!allorders) {
+      throw new Error("El no existenordenes activas.");
+    }
+else return allorders;
+  } catch (error) {
+    throw new Error("Error retrieving orders: " + error.message);
+  }
+};
+
+
+const getOrdersByUser = async (userId) => {
+  try {
+    let allorders = await Order.findAll({where: {userId: userId}});  
+    
+    if (!allorders) {
+      throw new Error("El usuario no tiene un ordenes activas.");
+    }
+
+
     return allorders;
   } catch (error) {
     throw new Error("Error retrieving orders: " + error.message);
   }
 };
 
-module.exports = { postOrder, getOrders, updateProductStock };
+module.exports = { postOrder, getOrders, updateProductStock, getOrdersByUser };

@@ -54,17 +54,20 @@ userRouter.put("/:id", async (req, res) => {
 userRouter.post("/changePass", recuperarPassword);
 
 //ruta para verificar si user existe y si es valida la exp reg...
-userRouter.get("/", async (req, res) => {
+userRouter.get("/"  ,verificaToken, verifyAdmin, async (req, res) => {
+  //console.log("ruta de get/ de usuarios");
   const regex_FullText = /^([a-zA-Z ]+)/i;
 
   const { name } = req.query;
-  console.log("ruta de get/", name);
+  //console.log("ruta de get/", name);
   let users;
 
   try {
     if (name) {
       if (name.trim() === "") {
+        
         users = await getUsers();
+        //console.log ("lista de users", users)
         res.status(200).json({ data: users, message: "Listado de usuarios" });
       } else {
         if (regex_FullText.test(name)) {
@@ -90,6 +93,7 @@ userRouter.get("/", async (req, res) => {
       }
     } else {
       users = await getUsers();
+      //console.log ("lista de users", users)
       res.status(200).json({ data: users, message: "Listado de usuarios" });
     }
   } catch (error) {
@@ -103,6 +107,7 @@ userRouter.get("/", async (req, res) => {
 
 //////////////////////////////// TRAER USUARIO POR PARAMETRO ////////////////////////////////
 userRouter.get("/:id", async (req, res) => {
+  console.log("solicitado usuario por id /:id");
   const userId = req.params.id;
   try {
     const result = await getUserId(userId);

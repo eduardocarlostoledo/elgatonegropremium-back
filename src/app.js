@@ -29,6 +29,8 @@ if (ACCESS_TOKEN_MERCADOPAGO) {
 
 // Variables para URLs comunes
 const whitelist = [
+  "localhost:3000",
+  "localhost:3001",  
   "localhost:5173",
   "localhost:3001",
   "http://localhost:3001",
@@ -70,7 +72,8 @@ server.use(
         imgSrc: ["'self'", "data:", ...whitelist],
         connectSrc: ["'self'", ...whitelist],
         fontSrc: ["'self'", "https:", "data:", ...whitelist],
-        frameSrc: ["'self'", ...whitelist],
+        frameSrc: ["'self'", "https://www.mercadopago.com", ...whitelist],
+        formAction: ["'self'", "https://elgatonegropremium-back-production.up.railway.app"],
         objectSrc: ["'none'"], // Más seguro: bloquea objetos embebidos
         upgradeInsecureRequests: [], // Vacío porque es booleano implícito
         baseUri: ["'self'"], // Directiva separada
@@ -85,7 +88,7 @@ server.use(
 server.use ( (req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
-    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com"  
+    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com https://api.mercadopago.com https://sdk.mercadopago.com https://accounts.google.com/o/oauth2/v2/auth/oauthchooseaccount https://elgatonegropremium-back-production.up.railway.app/users/auth/google http://localhost:3001/users/auth/google https://events.mercadopago.com https://api.mercadolibre.com/tracks https://events.mercadopago.com/v2/traffic-light"
   );
 next();
 })
@@ -116,7 +119,7 @@ const corsOptions = {
 server.use(cors(corsOptions));
 
 // Otros middlewares
-// server.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+server.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 server.use(express.json());
 server.use(express.urlencoded({ extended: false }));
 server.use(fileUpload({ useTempFiles: true, tempFileDir: "./uploads" }));
@@ -141,7 +144,8 @@ server.use(
     secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: true,
-    cookie: { sameSite: "None", secure: true },
+    cookie: { sameSite: "Lax", secure: process.env.NODE_ENV === "production" }
+    // cookie: { sameSite: "None", secure: true }, //solo para https
   })
 );
 server.use(passport.initialize());

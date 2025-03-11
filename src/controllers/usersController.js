@@ -106,6 +106,7 @@ const loginGoogle = async (req, res) => {
 const getUsers = async () => {
   try {
     const result = await User.findAll();
+  
     if (result) return result;
     throw new Error("Empy users database:");
   } catch (error) {

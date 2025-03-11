@@ -1,77 +1,93 @@
 const { Router } = require('express');
 const jwt = require('jsonwebtoken');
-
 const { 
-    getProductsCart,
-    addProductCart,
-    deleteProductCart,
-    deleteAllCart,
-    getCarritoDeUsuario,
-} = require('../controllers/cartController')
-
-const { Cart,Product } = require("../db");
+  getProductsCart,
+  addProductCart,
+  deleteProductCart,
+  deleteAllCart,
+  getCarritoDeUsuario,
+} = require('../controllers/cartController');
 const { verificaToken } = require('../helpers/verificaToken');
 
-const cartRouter = Router()
+const cartRouter = Router();
 
-cartRouter.get('/', async (req,res) => {
-    try {
-        const productsCart = await getProductsCart()
-        res.status(200).json(productsCart)
-    } catch (error) {
-        res.status(400).send(error.message)
-    }
-})
+// Obtener todos los carritos
+cartRouter.get('/', verificaToken, async (req, res) => {
+  try {
+    console.log("Obteniendo carritos");
+    const productsCart = await getProductsCart();
+    res.status(200).json(productsCart);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
-cartRouter.post('/', async (req,res) => {
-    try {
-    //console.log(req.body)
-    const result = await addProductCart(req.body);
+// Agregar producto al carrito
+cartRouter.post('/', verificaToken, async (req, res) => {
+  try {
+    // console.log(req.body);
+    const { product, user } = req.body;
+    const token = req.headers['authorization']?.split(' ')[1];
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+
+    const result = await addProductCart(product, user, decoded.userId);
+    // console.log("ruta /post cart . Producto agregado al carrito:", result.cartProducts);
     res.status(200).json(result);
-    } catch (error) {
-        res.status(400).json(error.message) 
-    }
-})
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
-cartRouter.delete('/:prodId', async (req,res) => {
-    console.log("delete id", req.params)
-    try {
-        const deleteProduct = await deleteProductCart(req.params.prodId)
-        res.status(200).json(deleteProduct)
-    } catch (error) {
-        res.status(400).json(error.message) 
-    }
-})
-
-
-cartRouter.delete('/deletecart', async (req, res) => {
-    
-const {user} = req.body.payload
-console.log("delete cart", user)    
-    try {
-      /* Eliminar todo el contenido del carrito */
-      await deleteAllCart(user);
+// Eliminar producto del carrito
+// cartRouter.delete('/:prodId', verificaToken, async (req, res) => {
+//     try {
+//       const { prodId } = req.params; // Extraer prodId de los parámetros de la ruta
+//       const token = req.headers['authorization']?.split(' ')[1];
+//       const decoded = await jwt.verify(token, process.env.JWT_SECRET);
   
-      
-      /* Devolver una respuesta exitosa */
-      return res.status(200).json({ message: 'El carrito ha sido eliminado' });
+//       // Llamar a la función para eliminar el producto del carrito
+//       const result = await deleteProductCart(prodId, decoded.userId);
+//       res.status(200).json(result);
+//     } catch (error) {
+//       console.error("Error eliminando producto del carrito:", error);
+//       res.status(400).json({ error: error.message });
+//     }
+//   });
+
+// Obtener carrito de un usuario
+cartRouter.get("/getcartclient/:userId", verificaToken, async (req, res) => {
+    //console.log("1 getcartclient /getcartclient/:userId", req.params.userId);
+  try {
+    const token = req.headers['authorization']?.split(' ')[1];
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+
+    const carritoCliente = await getCarritoDeUsuario(decoded.userId);
+
+    if (!carritoCliente) {
+      return res.status(404).json({ message: "No se encontró el carrito del cliente" });
+    }
+    //console.log("4 Carrito del cliente:/getcartclient/:userId", carritoCliente);
+    res.status(200).json(carritoCliente);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Eliminar todo el carrito
+cartRouter.delete('/deletecart', verificaToken, async (req, res) => {
+    try {
+      const token = req.headers['authorization']?.split(' ')[1];
+      const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+  
+      // Llamar a la función para eliminar todo el carrito
+      await deleteAllCart(decoded.userId);
+  
+      // Devolver una respuesta exitosa
+      res.status(200).json({ message: 'El carrito ha sido eliminado' });
     } catch (error) {
-        res.status(400).json(error.message) 
+      console.error("Error eliminando el carrito:", error);
+      res.status(400).json({ error: error.message });
     }
   });
 
-  cartRouter.get("/getcartclient/:userId",verificaToken, async(req, res) =>{
-    try {               
-    const token = req.headers['authorization']?.split(' ')[1];
-    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
-    console.log("asd",decoded)
-        
-        const carritoCliente = await getCarritoDeUsuario(decoded.userId)
-        res.status(200).json(carritoCliente);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-
-    }
-  })
-
-module.exports={cartRouter};
+module.exports = { cartRouter };

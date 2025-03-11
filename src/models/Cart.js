@@ -5,32 +5,30 @@ module.exports = (sequelize) => {
     "cart",
     {
         id: {
-            type: DataTypes.BIGINT,
-            autoIncrement: true,
+          type: DataTypes.UUID,
+          defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
           },
 
       cartUserId: {
-        type: DataTypes.BIGINT, // Asegúrate de que sea UUID
+        type: DataTypes.UUID, // Asegúrate de que sea UUID
         allowNull: false,
         primaryKey: true,
       },
-      cartProducts: {
+      cartProducts:       
+       {
         type: DataTypes.ARRAY(
           DataTypes.JSONB({
-            prodId: DataTypes.BIGINT,
-            name: DataTypes.STRING, // Nombre del producto
-            image: {
-              type: DataTypes.JSON,
-              public_id: DataTypes.STRING,
-              secure_url: DataTypes.STRING,
-            },            
-            price: DataTypes.DOUBLE, // Precio del producto            
+            name: DataTypes.STRING,
+            image: DataTypes.STRING,
+            price: DataTypes.INTEGER,
             amount: DataTypes.INTEGER,
           })
         ),
-        allowNull: false,
-      },
+        defaultValue: [],
+      },      
+      
+      
       order: {
         type: DataTypes.BIGINT,
         allowNull: false,

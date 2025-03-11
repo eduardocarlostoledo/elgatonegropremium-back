@@ -1,11 +1,12 @@
 const { Router } = require('express');
 const {productRouter} = require('./productRouter')
 const {userRouter} = require("./userRouter.js")
-const {cartRouter}=require("./cartRouter.js")
+const {cartRouter} = require("./cartRouter.js")
 const {filterRouter} = require("./filterRouter")
 const {payRouter} = require("./payRouter.js")
 const {orderRouter} = require("./orderRouter.js")
 const {googleRouter} = require("./googleRouter.js")
+const {cspRouter} = require("./cspRouter.js")
 // Importar todos los routers;
 // Ejemplo: const authRouter = require('./auth.js');
 
@@ -21,5 +22,6 @@ router.use('/filter',filterRouter)
 router.use('/pay', payRouter)
 router.use("/order", orderRouter)
 router.use('/auth', googleRouter)
+router.use("csp", cspRouter)
 
 module.exports = router;

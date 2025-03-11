@@ -12,7 +12,7 @@ const verificaToken = async (req, res, next) => {
 
   try {
     // Verificar y decodificar el token
-    const decoded = await jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = await jwt.verify(token, process.env.JWT_SECRET); 
     req.user = decoded; // Almacenar la información del usuario decodificada
     //console.log("token confirmado req.user", req.user)
     next();
