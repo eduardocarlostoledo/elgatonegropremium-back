@@ -39,6 +39,7 @@ userRouter.get("/logout", (req, res) => {
 
 //////////////////////////////// MODIFICAR USUARIO  ///////////////////////////////////////
 userRouter.put("/:id", async (req, res) => {
+  console.log("solicitado modificar usuario por id /:id", req.body, req.params);
   const { id } = req.params;
   let image = false;
   if (req.files) image = req.files.image;

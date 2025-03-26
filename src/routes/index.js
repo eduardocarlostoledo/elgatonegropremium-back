@@ -7,6 +7,7 @@ const {payRouter} = require("./payRouter.js")
 const {orderRouter} = require("./orderRouter.js")
 const {googleRouter} = require("./googleRouter.js")
 const {cspRouter} = require("./cspRouter.js")
+const {chatRouter} = require("./chatRouter.js")
 // Importar todos los routers;
 // Ejemplo: const authRouter = require('./auth.js');
 
@@ -23,5 +24,6 @@ router.use('/pay', payRouter)
 router.use("/order", orderRouter)
 router.use('/auth', googleRouter)
 router.use("csp", cspRouter)
+router.use("/chat", chatRouter);
 
 module.exports = router;
