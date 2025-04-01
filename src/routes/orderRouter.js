@@ -4,11 +4,33 @@ const orderRouter = Router();
 const {
   postOrder,
   getOrders,
-  getOrdersByUser,
+  getOrdersByUser, updateOrder
 } = require("../controllers/orderControllers");
 const { verificaToken } = require("../helpers/verificaToken");
 const { verifyAdmin } = require("../helpers/verifyAdmin");
 
+// Ruta para actualizar órdenes - versión corregida
+orderRouter.put("/:orderId", verificaToken, async (req, res) => {
+  const { orderId } = req.params;
+  const updates = req.body; // Recibimos todo el objeto de actualizaciones
+
+  console.log(`PUT /orders/${orderId}`, updates);
+  
+  try {
+    if (!updates || Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: "Datos de actualización requeridos." });
+    }
+
+    const updatedOrder = await updateOrder(orderId, updates);
+    return res.status(200).json(updatedOrder);
+  } catch (error) {
+    console.error("Error updating order:", error);
+    return res.status(500).json({ 
+      message: "Error al actualizar la orden",
+      error: error.message 
+    });
+  }
+});
 // orderRouter.post('/', async (req,res) => {
 //     try {
 //         console.log("REQ.BODY POST CART", req.body)
