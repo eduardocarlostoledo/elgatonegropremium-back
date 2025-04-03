@@ -238,6 +238,7 @@ const getProductName = async (product) => {
 // };
 
 const postProduct = async (product, image) => {
+  console.log("POST PRODUCT", product, image)
   const { name, price, type, brand, description, info_adicional, stock } = product;
   if (!name || !price || !type || !brand || !description || !image || !stock) {
     throw new Error("Mandatory data missing");
@@ -269,6 +270,7 @@ const postProduct = async (product, image) => {
 
 
 const putProduct = async (id,product, image) => {
+  console.log("PUT PRODUCT controller", id, product, image)
   const { name, price, type, brand, description,info_adicional, stock } = product;
   const productToUpdate=await Product.findByPk(id) 
   if(!productToUpdate) throw Error('El producto que desea actualizar no existe')

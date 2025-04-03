@@ -5,7 +5,7 @@ const {getUserById} = require("../controllers/usersController.js")
 
 // Middleware para verificar si el usuario es administrador
 const verifyAdmin = async (req, res, next) => {
-  console.log("verificando admin en midleware", req.headers)
+  //console.log("verificando admin en midleware", req.headers)
     try {
 
       const token = req.headers['authorization']?.split(' ')[1]; // "Bearer <token>"
@@ -24,7 +24,7 @@ const verifyAdmin = async (req, res, next) => {
       const userId = decoded.userId; // Suponiendo que el ID del usuario está en el cuerpo de la petición
       const userEmail = decoded.email;
   
-      console.log("VERIFY", decoded,  userId, userEmail) 
+      //console.log("VERIFY", decoded,  userId, userEmail) 
   
       if (!decoded.admin) {
         return res.status(403).json({ error: 'Acceso denegado. Solo administradores pueden realizar esta acción.' });

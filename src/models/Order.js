@@ -78,6 +78,18 @@ module.exports = (sequelize) => {
         allowNull: true,
         defaultValue: 'pendiente'
       },
+      trackSeguimiento: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      trackUrl: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      trackCarrierName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
       createdAt: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW, // Fecha y hora actuales

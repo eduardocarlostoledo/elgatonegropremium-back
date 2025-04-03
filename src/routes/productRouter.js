@@ -43,9 +43,10 @@ productRouter.post('/',
 // Ruta PUT para actualizar un producto
 productRouter.put('/:id', 
   verificaToken, verifyAdmin, 
-  async (req, res) => {
+  async (req, res) => {    
   let image = req.files ? req.files.image : false;
   try {
+    console.log("ruta put product", req.params.id, req.body, image)
     const updateProduct = await putProduct(req.params.id, req.body, image);
     res.status(200).json(updateProduct);
   } catch (error) {

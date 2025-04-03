@@ -4,33 +4,36 @@ const orderRouter = Router();
 const {
   postOrder,
   getOrders,
-  getOrdersByUser, updateOrder
+  getOrdersByUser,
+  updateOrder,
+  getOrderById,
 } = require("../controllers/orderControllers");
 const { verificaToken } = require("../helpers/verificaToken");
 const { verifyAdmin } = require("../helpers/verifyAdmin");
 
-// Ruta para actualizar órdenes - versión corregida
-orderRouter.put("/:orderId", verificaToken, async (req, res) => {
+
+orderRouter.patch("/:orderId", async (req, res) => {
   const { orderId } = req.params;
-  const updates = req.body; // Recibimos todo el objeto de actualizaciones
+  const { status, estadoEnvio, payment_type, buyer_address, buyer_phone, trackSeguimiento, trackUrl, trackCarrierName } = req.body;
 
-  console.log(`PUT /orders/${orderId}`, updates);
-  
+  console.log("orderId", orderId, status, estadoEnvio, payment_type, buyer_address, buyer_phone, trackSeguimiento, trackUrl, trackCarrierName);
+
+  // Validar que el cuerpo de la petición no esté vacío
+  if (!Object.keys(req.body).length) {
+    return res.status(400).json({ message: "Los datos de actualización son obligatorios." });
+  }
+
   try {
-    if (!updates || Object.keys(updates).length === 0) {
-      return res.status(400).json({ message: "Datos de actualización requeridos." });
-    }
-
-    const updatedOrder = await updateOrder(orderId, updates);
-    return res.status(200).json(updatedOrder);
+    const updatedOrder = await updateOrder(orderId, status, estadoEnvio, payment_type, buyer_address, buyer_phone, trackSeguimiento, trackUrl, trackCarrierName);
+    return res.json(updatedOrder);
   } catch (error) {
-    console.error("Error updating order:", error);
-    return res.status(500).json({ 
-      message: "Error al actualizar la orden",
-      error: error.message 
-    });
+    return res.status(500).json({ message: "Error al actualizar la orden", error: error.message });
   }
 });
+
+
+
+
 // orderRouter.post('/', async (req,res) => {
 //     try {
 //         console.log("REQ.BODY POST CART", req.body)
@@ -77,6 +80,19 @@ orderRouter.get("/getorderclient/:userId", async (req, res) => {
   const { userId } = req.params;
   try {
     const response = await getOrdersByUser(userId);
+    res.status(201).json(response);
+  } catch (error) {
+    res.status(400).json("Error Handler Get Order");
+  }
+});
+
+//se solicitan todas las ordenes del cliente
+orderRouter.get("/getorderid/:id", async (req, res) => {
+  console.log("1 getorderid ", req.params.id);
+  const { id } = req.params;
+  try {
+    const response = await getOrderById(id);
+
     res.status(201).json(response);
   } catch (error) {
     res.status(400).json("Error Handler Get Order");

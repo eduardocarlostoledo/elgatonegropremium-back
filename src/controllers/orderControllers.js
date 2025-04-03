@@ -29,6 +29,18 @@ async function postOrder(orderData) {
   }
 }
 
+async function getOrderById(id) { 
+
+  try {
+    const order = await Order.findByPk(id);
+    if (!order) throw new Error("Orden no encontrada.");
+    return order;
+  } catch (error) {
+    console.error("Error obteniendo orden:", error.message);
+    throw new Error("Error obteniendo orden: " + error.message);
+  }
+}
+
 async function getOrders() {
   try {
     const allOrders = await Order.findAll();
@@ -51,36 +63,38 @@ async function getOrdersByUser(userId) {
   }
 }
 
-async function updateOrder(orderId, updates) {
+async function updateOrder(orderId, status, estadoEnvio, payment_type, buyer_address, buyer_phone, trackSeguimiento, trackUrl, trackCarrierName) {
   try {
     const order = await Order.findByPk(orderId);
     if (!order) throw new Error("Orden no encontrada.");
 
-    // Campos permitidos para actualización
-    const allowedFields = ['status', 'estadoEnvio', 'payment_type'];
-    const filteredUpdates = Object.keys(updates)
-      .filter(key => allowedFields.includes(key))
-      .reduce((obj, key) => {
-        obj[key] = updates[key];
-        return obj;
-      }, {});
+    // Actualizar la orden correctamente
+    await Order.update(
+      {
+        status,
+        estadoEnvio,
+        payment_type,
+        buyer_address: JSON.stringify(buyer_address), // Convertir a string si usa JSON en la BD
+        buyer_phone,
+        trackSeguimiento,
+        trackUrl,
+        trackCarrierName,
+      },
+      { where: { id: orderId } } // Especificar la condición de actualización
+    );
 
-    if (Object.keys(filteredUpdates).length === 0) {
-      throw new Error("No se proporcionaron campos válidos para actualizar");
-    }
+    console.log(`Orden ID ${orderId} actualizada:`, status, estadoEnvio, payment_type, buyer_address, buyer_phone, trackSeguimiento, trackUrl, trackCarrierName);
 
-    await Order.update(filteredUpdates, { where: { id: orderId } });
-    
-    // Obtener y retornar la orden actualizada
-    const updatedOrder = await Order.findByPk(orderId);
-    return updatedOrder;
+    return await Order.findByPk(orderId); // Retornar la orden actualizada
   } catch (error) {
-    console.error(`Error actualizando orden ID ${orderId}:`, error);
-    throw error;
+    console.error(`Error actualizando orden ID ${orderId}:`, error.message);
+    throw new Error("Error actualizando orden: " + error.message);
   }
 }
 
-module.exports = { postOrder, getOrders, updateProductStock, getOrdersByUser, updateOrder };
+
+
+module.exports = { postOrder, getOrders, updateProductStock, getOrdersByUser, updateOrder, getOrderById };
 
 
 // reescrito 04-01-2025

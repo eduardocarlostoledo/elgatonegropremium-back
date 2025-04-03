@@ -12,9 +12,9 @@ if (!process.env.GEMINI_API_KEY) {
   throw new Error("GENERATIVE_API_KEY is not defined");
 }
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-console.log("instancia de genAI", genAI);
+//console.log("instancia de genAI", genAI);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
-console.log("instancia modelogenerativo", model);
+//console.log("instancia modelogenerativo", model);
 
 
 

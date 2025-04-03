@@ -102,6 +102,8 @@ payRouter.post("/create_preference", async (req, res) => {
       buyer_lastname: orderData.datos_Comprador.lastname,
       buyer_phone: orderData.datos_Comprador.phone,
       buyer_address: {
+        address: orderData.datos_Comprador.address,
+        state: orderData.datos_Comprador.state,
         city: orderData.datos_Comprador.city,
         country: orderData.datos_Comprador.country,
       },
@@ -135,6 +137,8 @@ payRouter.post("/create_preference", async (req, res) => {
         },
         shipments: {
           receiver_address: {
+            address: orderData.datos_Comprador.address,
+            state: orderData.datos_Comprador.state,
             city_name: orderData.datos_Comprador.city,
             country_name: orderData.datos_Comprador.country,
           },
