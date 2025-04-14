@@ -14,9 +14,11 @@ const {
 } = require("../controllers/usersController.js");
 const { verificaToken } = require("../helpers/verificaToken.js");
 const { verifyAdmin } = require("../helpers/verifyAdmin.js");
+const { verificaUsuario } = require("../helpers/verificaUsuario.js");
 
 const userRouter = Router();
 
+userRouter.get("/verificalogin", verificaUsuario);
 userRouter.get("/verificaUsuario", verificaToken);
 userRouter.get("/verificaAdmin", verifyAdmin);
 //////////////////////////////// CREAR USUARIO ///////////////////////////////////////
