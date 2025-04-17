@@ -123,38 +123,66 @@ const getUserId = async (userId) => {
     throw new Error("Error retrieving User by ID: " + error.message);
   }
 };
-
 const putUser = async (user, image, id) => {
-  const { name, lastname, email, password, phonenumber, country, city, address, admin, status } = user
+  const {
+    name,
+    lastname,
+    email,
+    password,
+    phonenumber,
+    country,
+    city,
+    address,
+    admin,
+    status
+  } = user;
 
-  if (!user && !image) throw Error('User data missing')
-  else {
-    try {
-      // const userBD = await User.findOne({ where: { email: `${email}` } });
-      // if (userBD) throw Error('The email already exists')
-      if (password) {
-        const passwordHash = await encrypt(password);
-        const changeUser = await User.update({ admin, status, name, lastname, email, password: passwordHash, phonenumber, country, city, address }, { where: { id } })
-        return changeUser
-      }
-      if (image) {
-        //invoco la funcion para subir la imagen a cloudinary
-        const userToUpdate = await User.findByPk(id)
-        const result = await uploadImage(image.tempFilePath)
-        if (userToUpdate.image && userToUpdate.image.public_id) deleteImage(userToUpdate.image.public_id)
-        await User.update({ image: { public_id: result.public_id, secure_url: result.secure_url } }, { where: { id } })
-        //borro la imagen de la carpeta uploads para que solo quede guardada en cloudinary
-        await fs.remove(image.tempFilePath)
-      }
-      const changeUser = await User.update({ admin, status, name, lastname, email, password, phonenumber, country, city, address }, { where: { id } })
-      return changeUser
+  if (!user && !image) throw Error('User data missing');
 
+  try {
+    const fieldsToUpdate = {
+      admin,
+      status,
+      name,
+      lastname,
+      email,
+      phonenumber,
+      country,
+      city,
+      address
+    };
 
-    } catch (error) {
-      throw Error(error.message)
+    // Si hay contraseña, hashearla y agregarla a los campos
+    if (password) {
+      const passwordHash = await encrypt(password);
+      fieldsToUpdate.password = passwordHash;
     }
+
+    // Si hay imagen, subir a Cloudinary y preparar campos
+    if (image) {
+      const userToUpdate = await User.findByPk(id);
+      const result = await uploadImage(image.tempFilePath);
+
+      if (userToUpdate.image?.public_id) {
+        await deleteImage(userToUpdate.image.public_id);
+      }
+
+      fieldsToUpdate.image = {
+        public_id: result.public_id,
+        secure_url: result.secure_url
+      };
+
+      await fs.remove(image.tempFilePath);
+    }
+
+    const changeUser = await User.update(fieldsToUpdate, { where: { id } });
+    return changeUser;
+
+  } catch (error) {
+    throw Error(error.message);
   }
-}
+};
+
 
 const postUserGoogle = async (req, res) => {
   console.log("post user google", req.body)
