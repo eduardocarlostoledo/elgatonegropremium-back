@@ -28,13 +28,6 @@ if (ACCESS_TOKEN_MERCADOPAGO) {
   );
 }
 
-// const newPreference = new Preference(mercadopagoClient);
-// console.log(newPreference);
-// newPreference.get({ preferenceId: '<PREFERENCE_ID>' }).then(console.log).catch(console.log);
-
-// let arrayPreference = {};
-
-// let arrayProducts = [];
 payRouter.post("/preference", (req, res) => {
   //console.log(mercadopago)
   //console.log("LLEGA REQ.BODY 0", req.body[0],"1", req.body[1]);
@@ -201,22 +194,22 @@ console.log("ORDEN prev", order.products);
     await deleteAllCart(order.userId);
     
     // Renderizar la página de éxito
-    res.redirect(`http://localhost:5173/success?payment_id=${payment_id}&status=${status}&merchant_order_id=${merchant_order_id}`);
-    // res.send(`
-    //   <!DOCTYPE html>
-    //   <html>
-    //     <head>
-    //       <title>Pago Exitoso</title>
-    //       <link rel="stylesheet" type="text/css" href="./payStyles/succes.css">
-    //     </head>
-    //     <body>
-    //       <h1>¡Pago Exitoso!</h1>
-    //       <p>ID del Pago: ${payment_id}</p>
-    //       <p>Estado: ${status}</p>
-    //       <p>ID de la Orden: ${merchant_order_id}</p>
-    //     </body>
-    //   </html>
-    // `);
+    // res.redirect(`${process.env.BACK}/success?payment_id=${payment_id}&status=${status}&merchant_order_id=${merchant_order_id}`);
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Pago Exitoso</title>
+          <link rel="stylesheet" type="text/css" href="./payStyles/succes.css">
+        </head>
+        <body>
+          <h1>¡Pago Exitoso!</h1>
+          <p>ID del Pago: ${payment_id}</p>
+          <p>Estado: ${status}</p>
+          <p>ID de la Orden: ${merchant_order_id}</p>
+        </body>
+      </html>
+    `);
 
     
   } catch (error) {
@@ -225,277 +218,245 @@ console.log("ORDEN prev", order.products);
   }
 });
 
-// payRouter.post("/create_preference", async (req, res) => {
-//   try {
-  
-//   //console.log("LLEGA PREFERENCIA", req.body);
+payRouter.get("/feedback/pending", async (req, res) => {
+  try {
+    const {
+      payment_id,
+      status,
+      external_reference,
+      merchant_order_id,
+      preference_id,
+      payment_type,
+      site_id,
+      processing_mode,
+    } = req.query;
 
-//   // Extraer los datos correctamente
-//   const products = req.body.preferencia; // Todos los elementos excepto el último
-//   const { total_order_price, description, datos_Comprador } =
-//     req.body.orderData;
+    if (!external_reference) {
+      throw new Error("Falta la referencia externa");
+    }
 
-//   //console.log("comprador", datos_Comprador);
+    const order = await Order.findOne({ where: { id: external_reference } });
+    if (!order) {
+      throw new Error(`No se encontró la orden con ID: ${external_reference}`);
+    }
 
-//   let arrayProducts = products.map((prod) => ({
-//     id: prod.prodId,
-//     title: prod.product_description,
-//     quantity: prod.product_amount,
-//     unit_price: prod.product_unit_price,
-//   }));
+    await order.update({
+      payment_id,
+      merchant_order_id,
+      status,
+      preference_id,
+      payment_type,
+      processing_mode,
+      site_id,
+    });
 
-  
-//     const user = await User.findOne({
-//       where: { email: datos_Comprador.email },
-//     });
-//     //console.log("USUARIO", user);
-//     const tieneCarrito = await Cart.findOne({ where: { cartUserId: user.id } });
-//     //console.log("CARRITO", tieneCarrito);
-//     const newOrder = await Order.create({
-//       userId: user.id,
-//       cartId: tieneCarrito.id,
-//       buyer_email: user.email
-//     }); 
-//     //console.log("ORDEN", newOrder);
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Pago Pendiente</title>
+          <link rel="stylesheet" type="text/css" href="./payStyles/pending.css">
+        </head>
+        <body style="background-color: #232326; display: flex; margin-top: 80px; flex-direction: column; align-items: center;">
+          <div style="display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid black; border-radius: 20px; background-color: #ffffff; padding: 20px;">
+            <a style="margin-bottom: 10px;" href="${process.env.FRONT}/">
+              <svg className='pending_svg' width="20px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25">
+                <path style="fill:#232326" d="M24 12.001H2.914l5.294-5.295-.707-.707L1 12.501l6.5 6.5.707-.707-5.293-5.293H24v-1z" data-name="Left"/>
+              </svg>
+            </a>
+            <h1 className="pending_h1">Pago Pendiente</h1>
+            <img className='pending_img' src="https://img.freepik.com/fotos-premium/simbolo-signo-exclamacion-azul-atencion-o-icono-signo-precaucion-fondo-problema-peligro-alerta-representacion-3d-senal-advertencia_256259-2831.jpg" alt="pendiente">
+            <a className="pending_a" href="${process.env.FRONT}/Products">Sigue comprando</a>
+            <p className="pending_p">GATO NEGRO STORE</p>
+          </div>
+        </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error("Error en /feedback/pending:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
-//   const instanciaPreferencia = new Preference(mercadopagoClient);
 
-//   instanciaPreferencia
-//     .create({
-//       body: {
-//         items: arrayProducts,
-//         back_urls: {
-//           success: `${process.env.BACK}/pay/feedback/success`,
-//           failure: `${process.env.BACK}/pay/feedback/failure`,
-//           pending: `${process.env.BACK}/pay/feedback/pending`,
-//         },
-//         external_reference: newOrder.id,
-//         auto_return: "approved",
-//         payer: {
-//           phone: { area_code: "", number: datos_Comprador.phone },
-//           email: datos_Comprador.email,
-//           identification: { number: "", type: "" },
-//           name: datos_Comprador.name,
-//           surname: datos_Comprador.lastname,
-//         },
-//         shipments: {
-//           default_shipping_method: null,
-//           receiver_address: {
-//             zip_code: "",
-//             street_name: "",
-//             street_number: null,
-//             floor: "",
-//             apartment: "",
-//             city_name: datos_Comprador.city,
-//             state_name: datos_Comprador.city,
-//             country_name: datos_Comprador.country,
-//           },
-//         },
-//       },
-      
-//     })
-//     .then(function (response) {
-//       //console.log("recibo preferencia", response);
-//       res.status(200).json({ id: response.id }); // Asegúrate de devolver el ID de la preferencia
-//     })
-//     .catch(function (error) {
-//       console.log(error);
-//       res.status(500).send({ error: "Error al crear la preferencia" });
-//     });
-
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ error: "Server error" });
-//   }
-// }
-// );
-
-// payRouter.get("/feedback/success", async function (req, res) {
-//   console.log("FEEDBACK SUCCESS - Query Params:", req.query);
-
+// payRouter.get("/feedback/pending", async function (req, res) {
 //   try {
 //     const {
-//       preference_id, // ID de la preferencia de MercadoPago
-//       external_reference, // Referencia externa (puede ser el ID de la orden en tu sistema)
-//       payment_id, // ID del pago en MercadoPago
-//       status, // Estado del pago
-//       merchant_order_id, // ID de la orden en MercadoPago
+//       payment_id: paymentId,
+//       status: statusId,
+//       merchant_order_id: merchantOrderId,
 //     } = req.query;
+//     const {
+//       product_description,
+//       total_order_price,
+//       prodId,
+//       buyer_email,
+//       product_name,
+//       product_image,
+//       product_amount,
+//       product_unit_price,
+//     } = arrayPreference;
 
-//     // Validar que los parámetros necesarios estén presentes
-//     if (!preference_id || !external_reference || !payment_id || !status || !merchant_order_id) {
-//       throw new Error("Faltan parámetros necesarios en la solicitud");
-//     }
+//     const newOrder = await postOrder(
+//       paymentId,
+//       statusId,
+//       merchantOrderId,
+//       product_description,
+//       total_order_price,
+//       prodId,
+//       buyer_email,
+//       product_name,
+//       product_image,
+//       product_amount,
+//       product_unit_price
+//     );
+//     //await enviarMail(product_description, total_order_price, buyer_email, statusId);
+//     await updateProductStock(prodId, product_amount);
+//     console.log("SE HA DESCONTADO", prodId, product_amount, "DEL STOCK");
 
-//     // Obtener la preferencia de MercadoPago
-//     const preference = new Preference(mercadopagoClient);
-//     await preference.get( {preferenceId : preference_id});
-//     console.log("Preferencia de MercadoPago:", preference);
-
-//     // Buscar la orden en tu base de datos usando la referencia externa
-//     const order = await Order.findOne({ where: { id: external_reference } });
-//     if (!order) {
-//       throw new Error(`No se encontró la orden con ID: ${external_reference}`);
-//     }
-//     console.log("Datos de la orden:", order);
-
-//     // Actualizar el stock de los productos (si es necesario)
-//     if (preference.items && Array.isArray(preference.items)) {
-//       for (const item of preference.items) {
-//         await updateProductStock(item.id, item.quantity);
-//         console.log(`Se ha descontado ${item.quantity} unidades del producto ${item.id}`);
-//       }
-//     }
+//     console.log(newOrder, "FEEDBACK PENDING ORDEN REGISTRADA OK");
 
 //     res.send(`
 //     <!DOCTYPE html>
 //     <html>
 //       <head>
 //         <title>Mi página HTML</title>
-//         <link rel="stylesheet" type="text/css" href="./payStyles/succes.css">
+//         <link rel="stylesheet" type="text/css" href="./payStyles/pending.css">
 //       </head>
 //       <body style="background-color: #232326; display: flex; margin-top: 80px; flex-direction: column; align-items: center;">
 //         <div style="display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid black; border-radius: 20px; background-color: #ffffff; padding: 20px;"">
-//           <a style="margin-bottom: 10px;" href=${process.env.FRONT}><svg className='succes_svg' width="50px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25"><path style="fill:#232326" d="M24 12.001H2.914l5.294-5.295-.707-.707L1 12.501l6.5 6.5.707-.707-5.293-5.293H24v-1z" data-name="Left"/></svg></a>
-//           <h1 style="margin-bottom: 10px;" >Payment Successful</h1>
-//           <img style="max-width: 100%; margin-bottom: 10px;" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_xXsXXnglKn4YmVFVx39Pd-0LgWqhiUVk5g&usqp=CAU" alt="" className='succes_img'>
-//           <a style="margin-bottom: 10px;" href="${process.env.FRONT}/Products" className="succes_a">SEGUIR COMPRANDO</a>
-//           <p style="margin-bottom: 10px;" className="succes_p">GATO NEGRO STORE</p>
-//           <ul style="margin-bottom: 10px; list-style-type: none;" className="succes_ul">          
-//             <li className="succes_li">Payment ID: ${payment_id}</li>
-//             <li className="succes_li">Status: ${status}</li>
-//             <li className="succes_li">Merchant Order ID: ${merchant_order_id}</li>
-//           </ul>
+//           <a style="margin-bottom: 10px;" href="${process.env.FRONT}/"><svg className='pending_svg' width="20px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25"><path style="fill:#232326" d="M24 12.001H2.914l5.294-5.295-.707-.707L1 12.501l6.5 6.5.707-.707-5.293-5.293H24v-1z" data-name="Left"/></svg></a>
+//           <h1 style="margin-bottom: 10px;" className="pending_h1"> PAGO PENDIENTE !</h1>
+//           <img style="max-width: 100%; margin-bottom: 10px;" className='pending_img'src="https://img.freepik.com/fotos-premium/simbolo-signo-exclamacion-azul-atencion-o-icono-signo-precaucion-fondo-problema-peligro-alerta-representacion-3d-senal-advertencia_256259-2831.jpg" alt="">
+//           <a style="margin-bottom: 10px;" className="pending_a" href="${process.env.FRONT}/Products">SIGUE COMPRANDO</a>
+//           <p style="margin-bottom: 10px;" className="pending_p">GATO NEGRO STORE</p>
 //         </div>
 //       </body>
 //     </html>
-//     `);
-
-//     await deleteAllCart(); // Eliminar el carrito después de una compra exitosa
+//       `);
+//     await deleteAllCart(); // esto elimina el carrito al realizar una compra exitosa
 //   } catch (error) {
 //     console.error(error);
 //     res.status(500).json({ error: "Server error" });
 //   }
 // });
 
-payRouter.get("/feedback/pending", async function (req, res) {
+payRouter.get("/feedback/failure", async (req, res) => {
   try {
     const {
-      payment_id: paymentId,
-      status: statusId,
-      merchant_order_id: merchantOrderId,
+      payment_id,
+      status,
+      external_reference,
+      merchant_order_id,
+      preference_id,
+      payment_type,
+      site_id,
+      processing_mode,
     } = req.query;
-    const {
-      product_description,
-      total_order_price,
-      prodId,
-      buyer_email,
-      product_name,
-      product_image,
-      product_amount,
-      product_unit_price,
-    } = arrayPreference;
 
-    const newOrder = await postOrder(
-      paymentId,
-      statusId,
-      merchantOrderId,
-      product_description,
-      total_order_price,
-      prodId,
-      buyer_email,
-      product_name,
-      product_image,
-      product_amount,
-      product_unit_price
-    );
-    //await enviarMail(product_description, total_order_price, buyer_email, statusId);
-    await updateProductStock(prodId, product_amount);
-    console.log("SE HA DESCONTADO", prodId, product_amount, "DEL STOCK");
+    if (!external_reference) {
+      throw new Error("Falta la referencia externa");
+    }
 
-    console.log(newOrder, "FEEDBACK PENDING ORDEN REGISTRADA OK");
+    const order = await Order.findOne({ where: { id: external_reference } });
+    if (!order) {
+      throw new Error(`No se encontró la orden con ID: ${external_reference}`);
+    }
+
+    await order.update({
+      payment_id,
+      merchant_order_id,
+      status,
+      preference_id,
+      payment_type,
+      processing_mode,
+      site_id,
+    });
 
     res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Mi página HTML</title>
-        <link rel="stylesheet" type="text/css" href="./payStyles/pending.css">
-      </head>
-      <body style="background-color: #232326; display: flex; margin-top: 80px; flex-direction: column; align-items: center;">
-        <div style="display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid black; border-radius: 20px; background-color: #ffffff; padding: 20px;"">
-          <a style="margin-bottom: 10px;" href="${process.env.FRONT}/"><svg className='pending_svg' width="20px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25"><path style="fill:#232326" d="M24 12.001H2.914l5.294-5.295-.707-.707L1 12.501l6.5 6.5.707-.707-5.293-5.293H24v-1z" data-name="Left"/></svg></a>
-          <h1 style="margin-bottom: 10px;" className="pending_h1"> PAGO PENDIENTE !</h1>
-          <img style="max-width: 100%; margin-bottom: 10px;" className='pending_img'src="https://img.freepik.com/fotos-premium/simbolo-signo-exclamacion-azul-atencion-o-icono-signo-precaucion-fondo-problema-peligro-alerta-representacion-3d-senal-advertencia_256259-2831.jpg" alt="">
-          <a style="margin-bottom: 10px;" className="pending_a" href="${process.env.FRONT}/Products">SIGUE COMPRANDO</a>
-          <p style="margin-bottom: 10px;" className="pending_p">GATO NEGRO STORE</p>
-        </div>
-      </body>
-    </html>
-      `);
-    await deleteAllCart(); // esto elimina el carrito al realizar una compra exitosa
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Pago Fallido</title>
+          <link rel="stylesheet" type="text/css" href="./payStyles/failure.css">
+        </head>
+        <body style="background-color: #232326; display: flex; margin-top: 80px; flex-direction: column; align-items: center;">
+          <div style="display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid black; border-radius: 20px; background-color: #ffffff; padding: 20px;">
+            <a style="margin-bottom: 10px;" href="${process.env.FRONT}/">
+              <svg className='failure_svg' width="30px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25">
+                <path style="fill:#232326" d="M24 12.001H2.914l5.294-5.295-.707-.707L1 12.501l6.5 6.5.707-.707-5.293-5.293H24v-1z" data-name="Left"/>
+              </svg>
+            </a>
+            <h1 className="failure_h1">Tu pago ha fallado</h1>
+            <img className="failure_img" src="https://static.vecteezy.com/system/resources/thumbnails/017/178/563/small/cross-check-icon-symbol-on-transparent-background-free-png.png" alt="fallido">
+            <a className="failure_a" href="${process.env.FRONT}/Products">Intentá nuevamente</a>
+            <p className="failure_p">GATO NEGRO STORE</p>
+          </div>
+        </body>
+      </html>
+    `);
   } catch (error) {
-    console.error(error);
+    console.error("Error en /feedback/failure:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-payRouter.get("/feedback/failure", async function (req, res) {
-  try {
-    const {
-      payment_id: paymentId,
-      status: statusId,
-      merchant_order_id: merchantOrderId,
-    } = req.query;
-    const {
-      product_description,
-      total_order_price,
-      prodId,
-      buyer_email,
-      product_name,
-      product_image,
-      product_amount,
-      product_unit_price,
-    } = arrayPreference;
+// payRouter.get("/feedback/failure", async function (req, res) {
+//   try {
+//     const {
+//       payment_id: paymentId,
+//       status: statusId,
+//       merchant_order_id: merchantOrderId,
+//     } = req.query;
+//     const {
+//       product_description,
+//       total_order_price,
+//       prodId,
+//       buyer_email,
+//       product_name,
+//       product_image,
+//       product_amount,
+//       product_unit_price,
+//     } = arrayPreference;
 
-    const newOrder = await postOrder(
-      paymentId,
-      statusId,
-      merchantOrderId,
-      product_description,
-      total_order_price,
-      prodId,
-      buyer_email,
-      product_name,
-      product_image,
-      product_amount,
-      product_unit_price
-    );
+//     const newOrder = await postOrder(
+//       paymentId,
+//       statusId,
+//       merchantOrderId,
+//       product_description,
+//       total_order_price,
+//       prodId,
+//       buyer_email,
+//       product_name,
+//       product_image,
+//       product_amount,
+//       product_unit_price
+//     );
 
-    console.log(newOrder, "FEEDBACK FAILURE ORDEN REGISTRADA OK");
+//     console.log(newOrder, "FEEDBACK FAILURE ORDEN REGISTRADA OK");
 
-    res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-      <title>Mi página HTML</title>
-      <link rel="stylesheet" type="text/css" href="./payStyles/failure.css">
-      </head>
-      <body style="background-color: #232326; display: flex; margin-top: 80px; flex-direction: column; align-items: center;">
-        <div style="display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid black; border-radius: 20px; background-color: #ffffff; padding: 20px;"">
-        <a style="margin-bottom: 10px;" href=${process.env.FRONT}><svg className='failure_svg' width="30px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25"><path style="fill:#232326" d="M24 12.001H2.914l5.294-5.295-.707-.707L1 12.501l6.5 6.5.707-.707-5.293-5.293H24v-1z" data-name="Left"/></svg></a>
-        <h1 style="margin-bottom: 10px;" className="failure_h1"> TU PAGO A FALLADO </h1>
-        <img style="max-width: 100%; margin-bottom: 10px;" className="failure_img" src="https://static.vecteezy.com/system/resources/thumbnails/017/178/563/small/cross-check-icon-symbol-on-transparent-background-free-png.png" alt="">
-        <a style="margin-bottom: 10px;" href="${process.env.FRONT}/Products" className="failure_a">INTENTALO NUEVAMENTE</a>
-        <p style="margin-bottom: 10px;" className="failure_p">GATO NEGRO STORE</p>
-      </div>
-      </body>
-  </html>
-              `);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server error" });
-  }
-});
+//     res.send(`
+//     <!DOCTYPE html>
+//     <html>
+//       <head>
+//       <title>Mi página HTML</title>
+//       <link rel="stylesheet" type="text/css" href="./payStyles/failure.css">
+//       </head>
+//       <body style="background-color: #232326; display: flex; margin-top: 80px; flex-direction: column; align-items: center;">
+//         <div style="display: flex; flex-direction: column; align-items: center; text-align: center; border: 1px solid black; border-radius: 20px; background-color: #ffffff; padding: 20px;"">
+//         <a style="margin-bottom: 10px;" href=${process.env.FRONT}><svg className='failure_svg' width="30px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25"><path style="fill:#232326" d="M24 12.001H2.914l5.294-5.295-.707-.707L1 12.501l6.5 6.5.707-.707-5.293-5.293H24v-1z" data-name="Left"/></svg></a>
+//         <h1 style="margin-bottom: 10px;" className="failure_h1"> TU PAGO A FALLADO </h1>
+//         <img style="max-width: 100%; margin-bottom: 10px;" className="failure_img" src="https://static.vecteezy.com/system/resources/thumbnails/017/178/563/small/cross-check-icon-symbol-on-transparent-background-free-png.png" alt="">
+//         <a style="margin-bottom: 10px;" href="${process.env.FRONT}/Products" className="failure_a">INTENTALO NUEVAMENTE</a>
+//         <p style="margin-bottom: 10px;" className="failure_p">GATO NEGRO STORE</p>
+//       </div>
+//       </body>
+//   </html>
+//               `);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Server error" });
+//   }
+// });
 
 module.exports = { payRouter };
