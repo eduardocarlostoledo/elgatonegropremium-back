@@ -18,7 +18,20 @@ const { verificaUsuario } = require("../helpers/verificaUsuario.js");
 
 const userRouter = Router();
 
-userRouter.get("/verificalogin", verificaUsuario);
+userRouter.get('/verificalogin', verificaUsuario, (req, res) => {
+  const user = req.user;
+  res.status(200).json({ 
+      success: true,
+      user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          admin: user.admin,
+          status: user.status,
+      }
+  });
+});
+
 userRouter.get("/verificaUsuario", verificaToken);
 userRouter.get("/verificaAdmin", verifyAdmin);
 //////////////////////////////// CREAR USUARIO ///////////////////////////////////////
