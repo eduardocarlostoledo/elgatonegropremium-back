@@ -17,7 +17,7 @@ const addProductCart = async (product, user) => {
     if (!esUsuario) throw new Error("El usuario no está registrado.");
 
     let tieneCarrito = await Cart.findOne({ where: { cartUserId: user } });
-    console.log("Carrito encontrado:", tieneCarrito?.cartProducts?.length);
+    //console.log("Carrito encontrado:", tieneCarrito?.cartProducts?.length);
 
     if (!tieneCarrito) {
       tieneCarrito = await Cart.create({
@@ -25,9 +25,9 @@ const addProductCart = async (product, user) => {
         cartProducts: [{ id: prod.id, name: prod.name, price: prod.price, image: prod.image,  amount: 1 }],
         order: Date.now(),
       });
-      console.log("Carrito creado", tieneCarrito.cartProducts);
+      //console.log("Carrito creado", tieneCarrito.cartProducts);
     } else {
-      console.log("Else, tiene carrito Carrito encontrado:", tieneCarrito.cartProducts);    
+      //console.log("Else, tiene carrito Carrito encontrado:", tieneCarrito.cartProducts);    
       
       let existingProducts = Array.isArray(tieneCarrito.cartProducts)
         ? [...tieneCarrito.cartProducts]
@@ -51,15 +51,12 @@ const addProductCart = async (product, user) => {
       // Actualizar carrito en la base de datos
       await tieneCarrito.update({ cartProducts: updatedProducts });
 
-      console.log(
-        "Productos en el carrito después de actualizar:",
-        updatedProducts
-      );
+      //console.log("Productos en el carrito después de actualizar:",updatedProducts;
 
-      console.log(
-        "Productos en el carrito antes de actualizar:",
-        existingProducts
-      );
+      // console.log(
+      //   "Productos en el carrito antes de actualizar:",
+      //   existingProducts
+      // );
       await tieneCarrito.update({ cartProducts: updatedProducts });
 
    
@@ -73,7 +70,7 @@ const addProductCart = async (product, user) => {
 };
 
 const getProductsCart = async () => {
-  console.log("getProductsCart");
+  //console.log("getProductsCart");
   try {
     const productsCart = await Cart.findAll({ order: [["order", "ASC"]] });
     return productsCart;
@@ -107,7 +104,7 @@ const getCarritoDeUsuario = async (userId) => {
 
 const deleteProductCart = async (prodId, userId) => {
   try {
-    console.log(prodId, userId, "deleteProductCart");
+    //console.log(prodId, userId, "deleteProductCart");
     if (!prodId || !userId) {
       throw new Error("El ID del producto o del usuario no está definido.");
     }
@@ -141,7 +138,7 @@ const deleteProductCart = async (prodId, userId) => {
 
 const deleteAllCart = async (userId) => {
   try {
-    console.log(userId);
+    //console.log(userId);
     const tieneCarrito = await Cart.findOne({ where: { cartUserId: userId } });
     if (!tieneCarrito) throw new Error("No hay carrito para este usuario");
 

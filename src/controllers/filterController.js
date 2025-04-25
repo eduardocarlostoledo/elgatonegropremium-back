@@ -9,7 +9,7 @@ const filterByPage = async (numPage,type,brand,price) => {
         brand ? products = await products.filter(p => p.brand == brand) : null
         
         if(price) {
-            console.log(price)
+            //console.log(price)
             if(price == 'a') products = await products.sort((a,b) => {return a.price - b.price})
             if(price == 'd') products = await products.sort((a,b) => {return a.price + b.price})
         }

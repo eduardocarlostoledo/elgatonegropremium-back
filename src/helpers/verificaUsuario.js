@@ -7,11 +7,11 @@ const verificaUsuario = async (req, res, next) => {
         if (!token) return res.status(401).json({ success: false, message: 'No token provided' });
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log("Decoded token:", decoded); // 👈
+        //console.log("Decoded token:", decoded); // 👈
 
         const user = await User.findByPk(decoded.userId); // ✅ correcto
 
-        console.log("User from DB:", user); // 👈
+        //console.log("User from DB:", user); // 👈
 
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });

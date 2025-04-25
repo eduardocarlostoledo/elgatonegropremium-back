@@ -6,7 +6,7 @@ const filterRouter = Router();
 filterRouter.get('/', async (req, res) => {
     try {
         const { page = 1, type, brand, price } = req.query; // Destructuramos y asignamos un valor por defecto a `page`
-        console.log("req query filters",  req.query)
+        //console.log("req query filters",  req.query)
         
         const result = await filterByPage(page, type, brand, price);
         

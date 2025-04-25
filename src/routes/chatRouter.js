@@ -3,10 +3,10 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const {Router} = require('express');
 const {postChat, 
 //    getChat
-} = require('../controllers/chatController');
+} = require('../controllers/chatController.js');
 require("dotenv").config();
 const chatRouter = Router();
-console.log(process.env.GEMINI_API_KEY);
+//console.log(process.env.GEMINI_API_KEY);
 
 if (!process.env.GEMINI_API_KEY) {
   throw new Error("GENERATIVE_API_KEY is not defined");
