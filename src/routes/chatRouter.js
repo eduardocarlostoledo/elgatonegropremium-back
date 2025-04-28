@@ -51,7 +51,7 @@ Nuestro objetivo es ofrecer prendas cómodas, funcionales y con estilo para acom
 const faqs = `
 Aquí tienes respuestas a preguntas frecuentes que pueden ayudarte:
 
-### Comprar en FitFemme Online
+### Comprar en Moda Total Online
 
 **¿Cómo encuentro un producto?**
 Puedes usar la barra de búsqueda en la parte superior del sitio o navegar por nuestras categorías: Leggings, Tops, Corpiños Deportivos, Buzos y Camperas, Accesorios. También puedes filtrar por talle, color o tipo de actividad.
