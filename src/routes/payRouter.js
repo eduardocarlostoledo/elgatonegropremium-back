@@ -106,38 +106,42 @@ payRouter.post("/create_preference", async (req, res) => {
 
     // Crear la preferencia de MercadoPago
     const instanciaPreferencia = new Preference(mercadopagoClient);
-    const response = await instanciaPreferencia.create({
-      body: {
-        items: preferencia.map((prod) => ({
-          id: prod.prodId,
-          title: prod.product_name,
-          quantity: prod.product_amount,
-          unit_price: prod.product_unit_price,
-        })),
-        back_urls: {
-          success: `${process.env.BACK}/pay/feedback/success`,
-          failure: `${process.env.BACK}/pay/feedback/failure`,
-          pending: `${process.env.BACK}/pay/feedback/pending`,
-        },
-        external_reference: newOrder.id, // Usar el ID de la orden como referencia externa
-        auto_return: "approved",
-        payer: {
-          phone: { area_code: "", number: orderData.datos_Comprador.phone },
-          email: orderData.datos_Comprador.email,
-          identification: { number: "", type: "" },
-          name: orderData.datos_Comprador.name,
-          surname: orderData.datos_Comprador.lastname,
-        },
-        shipments: {
-          receiver_address: {
-            address: orderData.datos_Comprador.address,
-            state: orderData.datos_Comprador.state,
-            city_name: orderData.datos_Comprador.city,
-            country_name: orderData.datos_Comprador.country,
-          },
+    
+    const preferenciaPayload = {
+      items: preferencia.map((prod) => ({
+        id: prod.prodId,
+        title: prod.product_name,
+        quantity: prod.product_amount,
+        unit_price: prod.product_unit_price,
+      })),
+      back_urls: {
+        success: `${process.env.BACK}/pay/feedback/success`,
+        failure: `${process.env.BACK}/pay/feedback/failure`,
+        pending: `${process.env.BACK}/pay/feedback/pending`,
+      },
+      auto_return: "approved",
+      external_reference: newOrder.id,
+      payer: {
+        phone: { area_code: "", number: orderData.datos_Comprador.phone },
+        email: orderData.datos_Comprador.email,
+        identification: { number: "", type: "" },
+        name: orderData.datos_Comprador.name,
+        surname: orderData.datos_Comprador.lastname,
+      },
+      shipments: {
+        receiver_address: {
+          address: orderData.datos_Comprador.address,
+          state: orderData.datos_Comprador.state,
+          city_name: orderData.datos_Comprador.city,
+          country_name: orderData.datos_Comprador.country,
         },
       },
-    });
+    };
+    
+    console.log("🟢 Payload enviado a MercadoPago:", JSON.stringify(preferenciaPayload, null, 2));
+    
+    const response = await mercadopago.preferences.create(preferenciaPayload);
+    
 
     // Devolver el ID de la preferencia
     res.status(200).json({ id: response.id });
@@ -194,22 +198,22 @@ console.log("ORDEN prev", order.products);
     await deleteAllCart(order.userId);
     
     // Renderizar la página de éxito
-    // res.redirect(`${process.env.BACK}/success?payment_id=${payment_id}&status=${status}&merchant_order_id=${merchant_order_id}`);
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Pago Exitoso</title>
-          <link rel="stylesheet" type="text/css" href="./payStyles/succes.css">
-        </head>
-        <body>
-          <h1>¡Pago Exitoso!</h1>
-          <p>ID del Pago: ${payment_id}</p>
-          <p>Estado: ${status}</p>
-          <p>ID de la Orden: ${merchant_order_id}</p>
-        </body>
-      </html>
-    `);
+    res.redirect(`${process.env.FRONT}/success?payment_id=${payment_id}&status=${status}&merchant_order_id=${merchant_order_id}`);
+    // res.send(`
+    //   <!DOCTYPE html>
+    //   <html>
+    //     <head>
+    //       <title>Pago Exitoso</title>
+    //       <link rel="stylesheet" type="text/css" href="./payStyles/succes.css">
+    //     </head>
+    //     <body>
+    //       <h1>¡Pago Exitoso!</h1>
+    //       <p>ID del Pago: ${payment_id}</p>
+    //       <p>Estado: ${status}</p>
+    //       <p>ID de la Orden: ${merchant_order_id}</p>
+    //     </body>
+    //   </html>
+    // `);
 
     
   } catch (error) {
