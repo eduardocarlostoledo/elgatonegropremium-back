@@ -29,6 +29,8 @@ if (ACCESS_TOKEN_MERCADOPAGO) {
 
 // Variables para URLs comunes
 const whitelist = [
+  "https://july-marroquineria.netlify.app/",
+  "http://july-marroquineria.netlify.app/",
   "https://modatotal.netlify.app",
   "modatotal.netlify.app",
   "localhost:3000",
