@@ -211,62 +211,75 @@ const postUserGoogle = async (req, res) => {
 
 //registro de usuarios y verificacion de datos iniciales
 const postUsers = async (req, res) => {
-  const infoUser = {}
-  const regexName = /^([a-zA-Z ]+)$/i;
-  const regexPassword = /^(?=.*\d)(?=.*[A-Z])(?=.*[a-z])(?=.*[a-zA-Z!#$%&? "])[a-zA-Z0-9!#$%&?]{8,20}$/
-  const regexEmail = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g
+  // Regex para nombres y apellidos (letras y espacios)
+  const regexName = /^[a-zA-Z\s]+$/; // Más simple y permite espacios
+
+  // Regex para la contraseña:
+  // - ^           : Inicio de la cadena
+  // - (?=.*[a-z]) : Debe contener al menos una letra minúscula
+  // - (?=.*[A-Z]) : Debe contener al menos una letra mayúscula
+  // - (?=.*\d)    : Debe contener al menos un dígito
+  // - (?=.*[!@#$%^&*()_+={}[\]|:;"'<>,.?/~`]) : Debe contener al menos un símbolo de la lista
+  // - .{8,20}     : Debe tener entre 8 y 20 caracteres en total (de cualquier tipo)
+  // - $           : Fin de la cadena
+  const regexPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+={}\[\]|:;"'<>,.?/~`]).{8,20}$/;
+
+  // Regex para el email
+  const regexEmail = /^[\w.-]+@([\w-]+\.)+[\w-]{2,4}$/; // Eliminado 'g' flag, no es necesario aquí y puede causar problemas.
 
   try {
     const { name, lastname, email, password } = req.body;
 
-    if (!name || !lastname || !password || !email) return res.json({ msg: 'Missing required fields' });
-
-
-    if (email && email.length > 0 && email != "") {
-      if (regexEmail.test(email)) {
-        const userBD = await User.findOne({ where: { email: `${email}` } });
-        if (userBD) {
-          return res.json({ msg: 'The email already exists' });
-        } else {
-          infoUser.email = `${email}`
-        }
-      }
+    // 1. Validación de campos obligatorios
+    if (!name || !lastname || !password || !email) {
+      return res.status(400).json({ msg: 'Missing required fields' });
     }
 
-    if (name && name.length > 0 && name != "") {
-      if (regexName.test(name)) {
-        infoUser.name = `${name}`
-      } else {
-        return res.json({ msg: 'The name is invalid' });
-      }
-    }
+    const infoUser = {}; // Objeto para almacenar la información validada
 
-    if (lastname && lastname.length > 0 && lastname != "") {
-      if (regexName.test(lastname)) {
-        infoUser.lastname = `${lastname}`
-      } else {
-        return res.json({ msg: 'The lastname is invalid' });
-      }
+    // 2. Validación de Email
+    if (!regexEmail.test(email)) {
+      return res.status(400).json({ msg: 'Invalid email format' });
     }
-
-    if (password && password.length > 0 && password != "") {
-      if (regexPassword.test(password)) {
-        const passwordHash = await encrypt(password);
-        infoUser.password = `${passwordHash}`
-      } else {
-        return res.json({ msg: 'The password is invalid' });
-      }
+    const userBD = await User.findOne({ where: { email } }); // shorthand para { email: email }
+    if (userBD) {
+      return res.status(409).json({ msg: 'The email already exists' }); // 409 Conflict para recurso existente
     }
+    infoUser.email = email;
 
-    await User.create({
-      name: name,
-      lastname: lastname,
-      password: infoUser.password,
-      email: email,
-    });
-    return res.json({ msg: `User create succesfully` });
+    // 3. Validación de Nombre
+    if (!regexName.test(name)) {
+      return res.status(400).json({ msg: 'The name is invalid (only letters and spaces allowed)' });
+    }
+    // Opcional: limitar longitud si no se hace en el frontend o si se quiere validar en backend también
+    if (name.length < 2 || name.length > 15) {
+      return res.status(400).json({ msg: 'Name must be between 2 and 15 characters' });
+    }
+    infoUser.name = name;
+
+    // 4. Validación de Apellido
+    if (!regexName.test(lastname)) {
+      return res.status(400).json({ msg: 'The lastname is invalid (only letters and spaces allowed)' });
+    }
+    // Opcional: limitar longitud si no se hace en el frontend o si se quiere validar en backend también
+    if (lastname.length < 2 || lastname.length > 15) {
+      return res.status(400).json({ msg: 'Lastname must be between 2 and 15 characters' });
+    }
+    infoUser.lastname = lastname;
+
+    // 5. Validación de Contraseña
+    if (!regexPassword.test(password)) {
+      return res.status(400).json({ msg: 'Password must be between 8-20 characters and include at least one uppercase letter, one lowercase letter, one number, and one symbol.' });
+    }
+    const passwordHash = await encrypt(password); // Asumiendo que `encrypt` es una función para hashear
+    infoUser.password = passwordHash;
+
+    // 6. Creación del usuario
+    await User.create(infoUser); // Usar el objeto infoUser directamente
+    return res.status(201).json({ msg: `User created successfully` }); // 201 Created para éxito en creación
   } catch (error) {
-    return res.json({ msg: `Error 404 - ${error}` });
+    console.error("Error creating user:", error); // Log del error para depuración
+    return res.status(500).json({ msg: `Internal server error: ${error.message}` }); // 500 para errores internos
   }
 };
 

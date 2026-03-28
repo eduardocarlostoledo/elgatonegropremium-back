@@ -28,6 +28,80 @@ if (ACCESS_TOKEN_MERCADOPAGO) {
   );
 }
 
+// WEBHOOK — MP notifica acá cuando hay cambios en pagos
+payRouter.post("/webhook", async (req, res) => {
+  try {
+    const { type, action, data } = req.body;
+
+    // Respondé 200 inmediato — MP necesita esto o reintenta
+    res.status(200).json({ received: true });
+
+    // Solo procesás pagos aprobados
+    if (type !== "payment") return;
+
+    const paymentId = data?.id;
+    if (!paymentId || paymentId === "123456") return; // ignora el test de MP
+
+    // Verificás el estado real contra la API de MP (nunca confíes solo en el webhook)
+    const mpResponse = await fetch(
+      `https://api.mercadopago.com/v1/payments/${paymentId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.ACCESS_TOKEN_MERCADOPAGO}`,
+        },
+      }
+    );
+
+    const pago = await mpResponse.json();
+
+    if (!pago || !pago.external_reference) return;
+
+    const order = await Order.findOne({
+      where: { id: pago.external_reference },
+    });
+
+    if (!order) {
+      console.error(`Orden no encontrada: ${pago.external_reference}`);
+      return;
+    }
+
+    // Actualizás según el estado que confirma MP
+    switch (pago.status) {
+      case "approved":
+        await order.update({
+          payment_id: String(pago.id),
+          status: "approved",
+          payment_type: pago.payment_type_id,
+        });
+
+        // Descontás stock y limpiás carrito (igual que en tu GET success)
+        for (const product of order.products) {
+          await updateProductStock(product.prodId, product.product_amount);
+        }
+        await deleteAllCart(order.userId);
+        break;
+
+      case "rejected":
+      case "cancelled":
+        await order.update({ status: pago.status });
+        break;
+
+      case "pending":
+      case "in_process":
+        await order.update({ status: pago.status });
+        break;
+
+      default:
+        console.log(`Estado no manejado: ${pago.status}`);
+    }
+  } catch (error) {
+    console.error("Error en webhook MP:", error);
+    // No mandés error a MP — ya respondiste 200 arriba
+  }
+});
+
+
+
 payRouter.post("/preference", (req, res) => {
   //console.log(mercadopago)
   //console.log("LLEGA REQ.BODY 0", req.body[0],"1", req.body[1]);
